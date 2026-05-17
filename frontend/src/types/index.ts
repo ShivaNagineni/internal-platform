@@ -2,7 +2,8 @@ export type UserRole = "EMPLOYEE" | "MANAGER" | "ADMIN" | "OWNER";
 
 export interface User {
   id: string;
-  azure_oid: string;
+  azure_oid: string | null;
+  zoho_uid: string | null;
   email: string;
   display_name: string;
   department: string | null;
@@ -69,7 +70,7 @@ export type IdeaCategory = "PRODUCT" | "PROCESS" | "TECH" | "CULTURE" | "OTHER";
 
 export interface IdeaAuthor {
   id: string;
-  azure_oid: string;
+  azure_oid: string | null;
   display_name: string;
   email: string;
   department: string | null;

@@ -71,6 +71,14 @@ async def zoho_exchange(body: ZohoExchangeRequest):
         if not zoho_access_token:
             raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="No access_token in Zoho response")
 
+        # Persist refresh token so the background sync can use it without user interaction
+        zoho_refresh_token = token_data.get("refresh_token")
+        if zoho_refresh_token:
+            from app.models.platform_settings import PlatformSettings
+            ps = await PlatformSettings.get_instance()
+            ps.zoho_refresh_token = zoho_refresh_token
+            await ps.save()
+
         # Fetch user info from Zoho
         info_resp = await client.get(
             _ZOHO_USERINFO_URL,

@@ -6,7 +6,8 @@ from app.models.user import UserRole
 
 class UserOut(BaseModel):
     id: uuid.UUID
-    azure_oid: str
+    azure_oid: str | None = None
+    zoho_uid: str | None = None
     email: str
     display_name: str
     department: str | None

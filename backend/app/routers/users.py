@@ -96,7 +96,7 @@ async def update_user_role(
     body: UserRoleUpdate,
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.role != UserRole.ADMIN:
+    if current_user.role not in {UserRole.ADMIN, UserRole.OWNER}:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
     user = await User.get(user_id)
     if not user:
@@ -108,7 +108,7 @@ async def update_user_role(
 
 @router.post("/sync", response_model=dict)
 async def trigger_sync(current_user: User = Depends(get_current_user)):
-    if current_user.role != UserRole.ADMIN:
+    if current_user.role not in {UserRole.ADMIN, UserRole.OWNER}:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
     from app.services.graph_service import sync_users_from_azure
     try:
@@ -116,3 +116,30 @@ async def trigger_sync(current_user: User = Depends(get_current_user)):
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
     return result
+
+
+@router.post("/sync-zoho", response_model=dict)
+async def trigger_zoho_sync(current_user: User = Depends(get_current_user)):
+    if current_user.role not in {UserRole.ADMIN, UserRole.OWNER}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+    from app.services.zoho_people_service import sync_users_from_zoho
+    try:
+        result = await sync_users_from_zoho()
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
+    return result
+
+
+@router.patch("/{user_id}/toggle-active", response_model=UserOut)
+async def toggle_user_active(
+    user_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role not in {UserRole.ADMIN, UserRole.OWNER}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+    user = await User.get(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    user.is_active = not user.is_active
+    await user.save()
+    return await _user_to_out(user)

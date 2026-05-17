@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Lightbulb,
   Rocket,
+  Users,
   Bell,
   LogOut,
   PanelLeftClose,
@@ -29,6 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Leave Tracker", to: "/leave", icon: CalendarDays },
   { label: "Innovation Hub", to: "/ideas", icon: Lightbulb },
   { label: "Release Control", to: "/releases", icon: Rocket },
+  { label: "Team Members", to: "/users", icon: Users },
 ];
 
 const ROUTE_TITLES: Record<string, string> = {
@@ -36,6 +38,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/leave": "Leave Tracker",
   "/ideas": "Innovation Hub",
   "/releases": "Release Control",
+  "/users": "Team Members",
 };
 
 function getPageTitle(pathname: string): string {

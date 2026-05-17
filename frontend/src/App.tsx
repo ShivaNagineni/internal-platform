@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import LeavePage from "@/pages/Leave";
 import IdeasPage from "@/pages/Ideas";
 import ReleasesPage from "@/pages/Releases";
+import UsersPage from "@/pages/Users";
 
 // ─── Zoho OAuth callback page ─────────────────────────────────────────────────
 
@@ -169,6 +170,7 @@ export default function App() {
                 <Route path="/leave" element={<LeavePage />} />
                 <Route path="/ideas" element={<IdeasPage />} />
                 <Route path="/releases" element={<ReleasesPage />} />
+                <Route path="/users" element={<UsersPage />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </Layout>
