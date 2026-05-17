@@ -77,7 +77,7 @@ async def update_user(
     body: UserUpdate,
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.role != UserRole.ADMIN and current_user.id != user_id:
+    if current_user.role not in {UserRole.ADMIN, UserRole.OWNER, UserRole.MANAGER} and current_user.id != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
     user = await User.get(user_id)
     if not user:
@@ -96,8 +96,8 @@ async def update_user_role(
     body: UserRoleUpdate,
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.role not in {UserRole.ADMIN, UserRole.OWNER}:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+    if current_user.role not in {UserRole.ADMIN, UserRole.OWNER, UserRole.MANAGER}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin or Manager only")
     user = await User.get(user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -112,8 +112,8 @@ async def toggle_user_active(
     user_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.role not in {UserRole.ADMIN, UserRole.OWNER}:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+    if current_user.role not in {UserRole.ADMIN, UserRole.OWNER, UserRole.MANAGER}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin or Manager only")
     user = await User.get(user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")

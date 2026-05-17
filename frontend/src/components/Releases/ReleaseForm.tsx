@@ -4,6 +4,7 @@ import { X, AlertCircle, Loader2 } from "lucide-react";
 import type { Release } from "@/types";
 import { cn } from "@/lib/utils";
 import { useCreateRelease, useUpdateRelease } from "@/hooks/useReleases";
+import { useRepositories } from "@/hooks/useRepositories";
 
 // ─── Semver validation ────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ interface FormState {
   release_date: string;
   description: string;
   changelog: string;
+  repository_ids: string[];
 }
 
 interface FormErrors {
@@ -47,6 +49,7 @@ function getInitialState(release?: Release): FormState {
     release_date: release?.release_date ? release.release_date.substring(0, 10) : "",
     description: release?.description ?? "",
     changelog: release?.changelog ?? "",
+    repository_ids: release?.repository_ids ?? [],
   };
 }
 
@@ -96,6 +99,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
   const isEditMode = Boolean(release);
   const createRelease = useCreateRelease();
   const updateRelease = useUpdateRelease();
+  const { data: repositories = [] } = useRepositories();
 
   const [form, setForm] = useState<FormState>(() => getInitialState(release));
   const [errors, setErrors] = useState<FormErrors>({});
@@ -152,6 +156,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
             description: form.description.trim() || undefined,
             release_date: form.release_date,
             changelog: form.changelog.trim() || undefined,
+            repository_ids: form.repository_ids,
           },
         });
       } else {
@@ -160,6 +165,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
           version: form.version.trim(),
           release_date: form.release_date,
           description: form.description.trim() || undefined,
+          repository_ids: form.repository_ids,
         });
       }
       onOpenChange(false);
@@ -277,6 +283,37 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
                   className={cn(INPUT_BASE, "resize-none leading-relaxed")}
                   disabled={isBusy}
                 />
+              </Field>
+
+              {/* Repositories */}
+              <Field label="Repositories" hint="Select repositories for this release">
+                <div className="grid gap-2 border border-slate-200 rounded-xl p-3 bg-slate-50/50 max-h-48 overflow-y-auto">
+                  {repositories.length === 0 ? (
+                    <p className="text-sm text-slate-500 italic px-2">No repositories configured.</p>
+                  ) : (
+                    repositories.map((repo) => (
+                      <label key={repo.id} className="flex items-center gap-3 p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-colors cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 transition-all"
+                          checked={form.repository_ids.includes(repo.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setField("repository_ids", [...form.repository_ids, repo.id]);
+                            } else {
+                              setField("repository_ids", form.repository_ids.filter((id) => id !== repo.id));
+                            }
+                          }}
+                          disabled={isBusy}
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-slate-800">{repo.name}</span>
+                          <span className="text-xs text-slate-500">{repo.github_repo}</span>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
               </Field>
 
               {/* Changelog — edit mode only */}

@@ -1,7 +1,9 @@
 import uuid
 from datetime import date, datetime
+from typing import Optional
 from pydantic import BaseModel
 from app.models.release import ReleaseStatus, ReleaseStatusEntry
+from app.schemas.repository import RepositoryOut
 
 
 class ReleaseCreate(BaseModel):
@@ -9,6 +11,7 @@ class ReleaseCreate(BaseModel):
     version: str
     description: str | None = None
     release_date: date | None = None
+    repository_ids: list[uuid.UUID] | None = None
 
 
 class ReleaseUpdate(BaseModel):
@@ -17,6 +20,7 @@ class ReleaseUpdate(BaseModel):
     release_date: date | None = None
     status: ReleaseStatus | None = None
     changelog: str | None = None
+    repository_ids: list[uuid.UUID] | None = None
 
 
 class ReleaseOwnerOut(BaseModel):
@@ -37,6 +41,8 @@ class ReleaseOut(BaseModel):
     status_history: list[ReleaseStatusEntry]
     owner_id: uuid.UUID | None
     owner: ReleaseOwnerOut | None
+    repository_ids: list[uuid.UUID] | None = None
+    repositories: list[RepositoryOut] | None = None
     changelog: str | None
     created_at: datetime
     updated_at: datetime

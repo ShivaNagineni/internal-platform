@@ -3,6 +3,7 @@ import { Users, Search, Shield, Building2, ToggleLeft, ToggleRight, Edit2, Check
 import type { User, UserRole } from "@/types";
 import { cn, getInitials } from "@/lib/utils";
 import { useUsers, useUpdateUserRole, useUpdateUser, useToggleUserActive } from "@/hooks/useUsers";
+import { useDepartments } from "@/hooks/useDepartments";
 
 // ─── Role badge ───────────────────────────────────────────────────────────────
 
@@ -75,6 +76,7 @@ export default function UsersPage() {
   const [showInactive, setShowInactive] = useState(false);
 
   const { data: users = [], isLoading } = useUsers("name", !showInactive);
+  const { data: departments = [] } = useDepartments();
   const updateRole = useUpdateUserRole();
   const updateUser = useUpdateUser();
   const toggleActive = useToggleUserActive();
@@ -107,11 +109,11 @@ export default function UsersPage() {
             className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+        {/* <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
           <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} className="rounded" />
           Show inactive
-        </label>
-        <span className="text-xs text-slate-400 ml-auto">{filtered.length} users</span>
+        </label> */}
+        <span className="rounded-md bg-indigo-500 px-2 py-1 text-white text-sm">{filtered.length} users</span>
       </div>
 
       {/* Table */}
@@ -153,11 +155,19 @@ export default function UsersPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       <Building2 className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
-                      <InlineEdit
+                      <select
                         value={user.department ?? ""}
-                        placeholder="Add department"
-                        onSave={(department) => updateUser.mutate({ id: user.id, department })}
-                      />
+                        onChange={(e) => updateUser.mutate({ id: user.id, department: e.target.value || null })}
+                        className="text-xs border border-slate-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400 cursor-pointer text-slate-600"
+                      >
+                        <option value="">—</option>
+                        {user.department && !departments.some((d) => d.name === user.department) && (
+                          <option value={user.department}>{user.department}</option>
+                        )}
+                        {departments.map((dept) => (
+                          <option key={dept.id} value={dept.name}>{dept.name}</option>
+                        ))}
+                      </select>
                     </div>
                   </td>
 

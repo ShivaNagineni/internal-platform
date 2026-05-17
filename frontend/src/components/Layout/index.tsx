@@ -8,6 +8,7 @@ import {
   Lightbulb,
   Rocket,
   Users,
+  Building2,
   Bell,
   LogOut,
   PanelLeftClose,
@@ -31,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Innovation Hub", to: "/ideas", icon: Lightbulb },
   { label: "Release Control", to: "/releases", icon: Rocket },
   { label: "Team Members", to: "/users", icon: Users },
+  // { label: "Departments", to: "/departments", icon: Building2 },
 ];
 
 const ROUTE_TITLES: Record<string, string> = {
@@ -39,6 +41,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/ideas": "Innovation Hub",
   "/releases": "Release Control",
   "/users": "Team Members",
+  "/departments": "Departments",
 };
 
 function getPageTitle(pathname: string): string {

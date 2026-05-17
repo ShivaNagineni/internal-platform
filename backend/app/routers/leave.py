@@ -60,8 +60,12 @@ async def who_is_out(
         Leave.end_date >= today,
     ).sort(+Leave.start_date).to_list()
 
+    seen = set()
     result = []
     for leave in leaves:
+        if leave.user_id in seen:
+            continue
+        seen.add(leave.user_id)
         user = await User.get(leave.user_id)
         if user:
             u_out = await _user_out(user)

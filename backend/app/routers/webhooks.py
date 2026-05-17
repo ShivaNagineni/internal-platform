@@ -101,8 +101,32 @@ async def _advance_release_status(release, new_status) -> bool:
     return True
 
 
+async def _release_matches_repo(release, pr_repo_full_name: str) -> bool:
+    """Returns True if a release should respond to a webhook from the given repo."""
+    from app.models.repository import Repository
+    if release.repository_ids:
+        for repo_id in release.repository_ids:
+            repo = await Repository.get(repo_id)
+            if repo and repo.github_repo.lower() == (pr_repo_full_name or "").lower():
+                return True
+        return False
+    
+    # Backward compat: no repository_ids → match against settings.github_repos
+    configured = [r.lower() for r in settings.get_github_repos()]
+    return (pr_repo_full_name or "").lower() in configured
+
+
+def _is_qa_branch_for_release(release, base_branch_lower: str) -> bool:
+    """Determine if the base branch matches the release's repo qa_branch."""
+    if release is None:
+        return base_branch_lower == "qa"
+    # Without an explicit repository_id we fall back to the legacy "qa" name
+    return base_branch_lower == "qa"
+
+
 async def _handle_github_pr(payload: dict) -> None:
     from app.models.release import Release, ReleaseStatus, ReleaseStatusEntry
+    from app.models.repository import Repository
 
     action = payload.get("action")
     pr = payload.get("pull_request", {})
@@ -110,6 +134,7 @@ async def _handle_github_pr(payload: dict) -> None:
     head_branch = pr.get("head", {}).get("ref", "")
     pr_title = pr.get("title", "")
     merged = pr.get("merged", False)
+    pr_repo_full_name = (payload.get("repository", {}) or {}).get("full_name", "")
 
     version_match = _VERSION_RE.search(pr_title) or _VERSION_RE.search(head_branch)
     if not version_match:
@@ -120,47 +145,84 @@ async def _handle_github_pr(payload: dict) -> None:
 
     from app.services.notification_service import notify_release_status_change
 
-    if action == "opened" and base_branch == "qa":
-        existing = await Release.find_one(Release.version == version)
-        if existing:
+    # Determine what branch role this base corresponds to for the matched release.
+    # First try to find an existing release for this version that belongs to the right repo.
+    candidate_release = None
+    candidates = await Release.find(Release.version == version).to_list()
+    for r in candidates:
+        if await _release_matches_repo(r, pr_repo_full_name):
+            candidate_release = r
+            break
+
+    # Resolve which branch role this base belongs to.
+    branch_role: str | None = None
+    if candidate_release and candidate_release.repository_ids:
+        # Check all repositories tied to this release
+        for repo_id in candidate_release.repository_ids:
+            repo = await Repository.get(repo_id)
+            if repo and repo.github_repo.lower() == pr_repo_full_name.lower():
+                if base_branch == repo.qa_branch.lower():
+                    branch_role = "qa"
+                elif base_branch == repo.main_branch.lower():
+                    branch_role = "main"
+                break
+    if branch_role is None:
+        # Fallback default: classic naming
+        if base_branch == "qa":
+            branch_role = "qa"
+        elif base_branch in ("main", "master"):
+            branch_role = "main"
+
+    if branch_role is None:
+        logger.info("GitHub PR base branch %s not recognized as qa/main — skipping", base_branch)
+        return
+
+    if action == "opened" and branch_role == "qa":
+        if candidate_release:
             return
+        # Try to auto-attach a repository_id by matching the webhook repo against our Repository docs
+        matched_repo = await Repository.find_one(Repository.github_repo == pr_repo_full_name)
         now = datetime.now(UTC)
+        repo_ids = [matched_repo.id] if matched_repo else []
+        pr_numbers = {str(matched_repo.id): pr.get("number")} if matched_repo and pr.get("number") else {}
         release = Release(
             title=pr_title,
             version=version,
             status=ReleaseStatus.PLANNED,
             status_history=[ReleaseStatusEntry(status=ReleaseStatus.PLANNED, changed_at=now)],
-            pr_number=pr.get("number"),
+            pr_numbers=pr_numbers,
+            repository_ids=repo_ids,
         )
         await release.insert()
         logger.info("Created release %s from GitHub PR", version)
         await notify_release_status_change(str(release.id))
 
-    elif action == "closed" and merged and base_branch == "qa":
-        release = await Release.find_one(Release.version == version)
-        if release:
-            advanced = await _advance_release_status(release, ReleaseStatus.STAGING)
+    elif action == "closed" and merged and branch_role == "qa":
+        if candidate_release:
+            advanced = await _advance_release_status(candidate_release, ReleaseStatus.STAGING)
             if advanced:
                 logger.info("Release %s advanced to STAGING", version)
-                await notify_release_status_change(str(release.id))
+                await notify_release_status_change(str(candidate_release.id))
 
-    elif action == "opened" and base_branch in ("main", "master"):
-        release = await Release.find_one(Release.version == version)
-        if release:
-            release.main_pr_number = pr.get("number")
-            await release.save()
-            advanced = await _advance_release_status(release, ReleaseStatus.IN_PROGRESS)
+    elif action == "opened" and branch_role == "main":
+        if candidate_release:
+            matched_repo = await Repository.find_one(Repository.github_repo == pr_repo_full_name)
+            if matched_repo:
+                if not candidate_release.main_pr_numbers:
+                    candidate_release.main_pr_numbers = {}
+                candidate_release.main_pr_numbers[str(matched_repo.id)] = pr.get("number")
+                await candidate_release.save()
+            advanced = await _advance_release_status(candidate_release, ReleaseStatus.IN_PROGRESS)
             if advanced:
                 logger.info("Release %s advanced to IN_PROGRESS", version)
-                await notify_release_status_change(str(release.id))
+                await notify_release_status_change(str(candidate_release.id))
 
-    elif action == "closed" and merged and base_branch in ("main", "master"):
-        release = await Release.find_one(Release.version == version)
-        if release:
-            advanced = await _advance_release_status(release, ReleaseStatus.RELEASED)
+    elif action == "closed" and merged and branch_role == "main":
+        if candidate_release:
+            advanced = await _advance_release_status(candidate_release, ReleaseStatus.RELEASED)
             if advanced:
                 logger.info("Release %s advanced to RELEASED", version)
-                await notify_release_status_change(str(release.id))
+                await notify_release_status_change(str(candidate_release.id))
 
 
 @router.post("/github")
@@ -313,19 +375,33 @@ async def _handle_block_action(payload: dict) -> None:
                     print(f"[SLACK ACTION] Release {release_id_str} not in PLANNED ({release.status.value})")
                     return
 
-                # Merge the dev→qa PR; GitHub webhook will advance status to STAGING
                 response_url = payload.get("response_url")
-                if release.pr_number:
+                if release.pr_numbers:
                     from app.services.github_api import merge_pr
-                    repos = settings.get_github_repos()
+                    from app.models.repository import Repository as _Repo
                     merged_any = False
-                    for repo in repos:
-                        ok = await merge_pr(repo, release.pr_number)
-                        if ok:
-                            merged_any = True
+                    
+                    if release.repository_ids:
+                        for repo_id in release.repository_ids:
+                            pr_num = release.pr_numbers.get(str(repo_id))
+                            if pr_num:
+                                repo_doc = await _Repo.get(repo_id)
+                                if repo_doc:
+                                    ok = await merge_pr(pr_num, github_repo=repo_doc.github_repo)
+                                    if ok:
+                                        merged_any = True
+                    else:
+                        # Legacy fallback
+                        for pr_num in release.pr_numbers.values():
+                            repos = settings.get_github_repos()
+                            for repo in repos:
+                                ok = await merge_pr(pr_num, github_repo=repo)
+                                if ok:
+                                    merged_any = True
+                                    
                     if response_url:
                         msg = "✅ Deployment approved — merging to QA. Status will update automatically." if merged_any \
-                            else "❌ Could not merge the PR. Please merge it manually on GitHub."
+                            else "❌ Could not merge the PRs. Please merge them manually on GitHub."
                         async with httpx.AsyncClient() as c:
                             await c.post(response_url, json={"replace_original": True, "text": msg, "blocks": []})
                 else:
@@ -345,16 +421,31 @@ async def _handle_block_action(payload: dict) -> None:
                     return
 
                 response_url = payload.get("response_url")
-                if release.main_pr_number:
+                if release.main_pr_numbers:
                     from app.services.github_api import merge_pr
+                    from app.models.repository import Repository as _Repo
                     merged_any = False
-                    for repo in settings.get_github_repos():
-                        ok = await merge_pr(repo, release.main_pr_number)
-                        if ok:
-                            merged_any = True
+                    
+                    if release.repository_ids:
+                        for repo_id in release.repository_ids:
+                            pr_num = release.main_pr_numbers.get(str(repo_id))
+                            if pr_num:
+                                repo_doc = await _Repo.get(repo_id)
+                                if repo_doc:
+                                    ok = await merge_pr(pr_num, github_repo=repo_doc.github_repo)
+                                    if ok:
+                                        merged_any = True
+                    else:
+                        # Legacy fallback
+                        for pr_num in release.main_pr_numbers.values():
+                            for repo in settings.get_github_repos():
+                                ok = await merge_pr(pr_num, github_repo=repo)
+                                if ok:
+                                    merged_any = True
+                                    
                     if response_url:
                         msg = "✅ Release approved — merging to main. Status will update automatically." if merged_any \
-                            else "❌ Could not merge the PR. Please merge it manually on GitHub."
+                            else "❌ Could not merge the PRs. Please merge them manually on GitHub."
                         async with httpx.AsyncClient() as c:
                             await c.post(response_url, json={"replace_original": True, "text": msg, "blocks": []})
                 else:

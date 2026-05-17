@@ -233,7 +233,7 @@ function PipelineColumn({
 
 export default function ReleasesPage() {
   const currentUserRole = useCurrentUserRole();
-  const canManage = currentUserRole === "MANAGER" || currentUserRole === "ADMIN";
+  const canManage = currentUserRole === "MANAGER" || currentUserRole === "ADMIN" || currentUserRole === "OWNER";
 
   // Data
   const { data: releases = [], isLoading } = useReleases();

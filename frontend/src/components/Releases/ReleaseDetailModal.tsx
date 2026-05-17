@@ -248,6 +248,21 @@ export default function ReleaseDetailModal({
               )}
             </div>
 
+            {/* Repositories */}
+            {release.repositories && release.repositories.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">
+                  Repositories
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {release.repositories.map((repo) => (
+                    <span key={repo.id} className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+                      {repo.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* Description */}
             {release.description && (
               <div>
