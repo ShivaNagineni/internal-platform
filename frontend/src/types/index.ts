@@ -8,6 +8,7 @@ export interface User {
   display_name: string;
   department: string | null;
   role: UserRole;
+  theme: "light" | "dark";
   points: number;
   is_active: boolean;
   created_at: string;

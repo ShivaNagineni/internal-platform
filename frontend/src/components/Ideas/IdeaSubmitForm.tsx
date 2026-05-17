@@ -96,7 +96,7 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
           className={cn(
             "fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
             "w-full max-w-xl max-h-[90vh] overflow-y-auto",
-            "bg-white rounded-2xl shadow-2xl border border-slate-100",
+            "bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -106,13 +106,13 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
           )}
         >
           {/* Header */}
-          <div className="px-6 pt-6 pb-4 border-b border-slate-100 flex items-center justify-between gap-3">
+          <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
                 <Lightbulb className="w-4 h-4 text-white" />
               </div>
               <div>
-                <Dialog.Title className="text-base font-bold text-slate-900 leading-tight">
+                <Dialog.Title className="text-base font-bold text-slate-900 dark:text-white leading-tight">
                   Submit New Idea
                 </Dialog.Title>
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -120,7 +120,7 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
                 </p>
               </div>
             </div>
-            <Dialog.Close className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150">
+            <Dialog.Close className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150">
               <X className="w-5 h-5" />
             </Dialog.Close>
           </div>
@@ -129,7 +129,7 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
             {/* Title */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-700">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Title <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
@@ -141,11 +141,11 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
                   onChange={(e) => setTitle(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, title: true }))}
                   className={cn(
-                    "w-full text-sm border rounded-xl px-3.5 py-2.5 pr-16 text-slate-800 placeholder-slate-400 transition-colors duration-150",
+                    "w-full text-sm border rounded-xl px-3.5 py-2.5 pr-16 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 transition-colors duration-150",
                     "focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400",
                     touched.title && titleError
-                      ? "border-rose-300 bg-rose-50 focus:ring-rose-200 focus:border-rose-400"
-                      : "border-slate-200 bg-white hover:border-slate-300"
+                      ? "border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/50 focus:ring-rose-200 focus:border-rose-400"
+                      : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600"
                   )}
                 />
                 <span
@@ -164,7 +164,7 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
 
             {/* Category */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-700">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Category <span className="text-rose-500">*</span>
               </label>
               <Select.Root
@@ -179,8 +179,8 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
                     "w-full flex items-center justify-between gap-2 text-sm border rounded-xl px-3.5 py-2.5 transition-colors duration-150",
                     "focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400",
                     touched.category && categoryError
-                      ? "border-rose-300 bg-rose-50 text-slate-500"
-                      : "border-slate-200 bg-white hover:border-slate-300 text-slate-800"
+                      ? "border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/50 text-slate-500 dark:text-slate-400"
+                      : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 text-slate-800 dark:text-slate-100"
                   )}
                 >
                   <Select.Value placeholder="Choose a category...">
@@ -190,7 +190,7 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
                         <span>{selectedCat.label}</span>
                       </span>
                     ) : (
-                      <span className="text-slate-400">Choose a category...</span>
+                      <span className="text-slate-400 dark:text-slate-500">Choose a category...</span>
                     )}
                   </Select.Value>
                   <Select.Icon>
@@ -202,7 +202,7 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
                   <Select.Content
                     position="popper"
                     sideOffset={4}
-                    className="z-[60] w-[--radix-select-trigger-width] bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden"
+                    className="z-[60] w-[--radix-select-trigger-width] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg overflow-hidden"
                   >
                     <Select.Viewport className="p-1">
                       {CATEGORIES.map((cat) => (
@@ -210,15 +210,15 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
                           key={cat.value}
                           value={cat.value}
                           className={cn(
-                            "flex items-center gap-2 px-3 py-2.5 text-sm text-slate-700 rounded-lg cursor-pointer outline-none",
-                            "data-[highlighted]:bg-indigo-50 data-[highlighted]:text-indigo-700",
+                            "flex items-center gap-2 px-3 py-2.5 text-sm text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer outline-none",
+                            "data-[highlighted]:bg-indigo-50 dark:data-[highlighted]:bg-indigo-950/50 data-[highlighted]:text-indigo-700 dark:data-[highlighted]:text-indigo-300",
                             "data-[state=checked]:font-medium"
                           )}
                         >
                           <span>{cat.emoji}</span>
                           <Select.ItemText>{cat.label}</Select.ItemText>
                           <Select.ItemIndicator className="ml-auto">
-                            <Check className="w-4 h-4 text-indigo-600" />
+                            <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                           </Select.ItemIndicator>
                         </Select.Item>
                       ))}
@@ -233,7 +233,7 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
 
             {/* Description */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-700">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Description <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
@@ -244,12 +244,12 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
                   onChange={(e) => setDescription(e.target.value)}
                   onBlur={() => setTouched((t) => ({ ...t, description: true }))}
                   className={cn(
-                    "w-full text-sm border rounded-xl px-3.5 py-2.5 text-slate-800 placeholder-slate-400 resize-y transition-colors duration-150",
+                    "w-full text-sm border rounded-xl px-3.5 py-2.5 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 resize-y transition-colors duration-150",
                     "focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400",
                     "min-h-[120px]",
                     touched.description && descError
-                      ? "border-rose-300 bg-rose-50 focus:ring-rose-200 focus:border-rose-400"
-                      : "border-slate-200 bg-white hover:border-slate-300"
+                      ? "border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/50 focus:ring-rose-200 focus:border-rose-400"
+                      : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600"
                   )}
                 />
               </div>
@@ -305,7 +305,7 @@ export default function IdeaSubmitForm({ open, onOpenChange }: Props) {
               </button>
               <Dialog.Close
                 type="button"
-                className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors duration-150"
+                className="px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors duration-150"
               >
                 Cancel
               </Dialog.Close>

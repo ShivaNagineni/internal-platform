@@ -66,9 +66,9 @@ function PipelineStepper({
   return (
     <div className="relative">
       {isCancelled ? (
-        <div className="flex items-center gap-2 py-3 px-4 bg-rose-50 rounded-xl border border-rose-100">
+        <div className="flex items-center gap-2 py-3 px-4 bg-rose-50 dark:bg-rose-950/50 rounded-xl border border-rose-100 dark:border-rose-900/60">
           <Ban className="w-4 h-4 text-rose-500 flex-shrink-0" />
-          <p className="text-sm text-rose-600 font-medium">
+          <p className="text-sm text-rose-600 dark:text-rose-400 font-medium">
             This release has been cancelled.
           </p>
         </div>
@@ -90,7 +90,7 @@ function PipelineStepper({
                         ? STEP_DOT_COLORS[step.status]
                         : isCurrent
                         ? STEP_DOT_COLORS[step.status] + " ring-4 ring-offset-0"
-                        : "bg-white border-slate-200"
+                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
                     )}
                     style={
                       isCurrent
@@ -105,10 +105,10 @@ function PipelineStepper({
                     className={cn(
                       "text-[10px] mt-1.5 text-center leading-tight whitespace-nowrap",
                       isCurrent
-                        ? "text-slate-800 font-semibold"
+                        ? "text-slate-800 dark:text-slate-200 font-semibold"
                         : isCompleted
-                        ? "text-slate-500 font-medium"
-                        : "text-slate-400"
+                        ? "text-slate-500 dark:text-slate-400 font-medium"
+                        : "text-slate-400 dark:text-slate-600"
                     )}
                   >
                     {step.label}
@@ -119,7 +119,7 @@ function PipelineStepper({
                   <div
                     className={cn(
                       "flex-1 h-px mt-2 mx-1 transition-colors duration-200",
-                      idx < currentIndex ? "bg-slate-300" : "bg-slate-200"
+                      idx < currentIndex ? "bg-slate-300 dark:bg-slate-600" : "bg-slate-200 dark:bg-slate-700"
                     )}
                   />
                 )}
@@ -174,17 +174,17 @@ export default function ReleaseDetailModal({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-100 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
 
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 rounded-t-2xl">
+          <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-6 py-4 rounded-t-2xl">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3 min-w-0">
-                <span className="font-mono text-sm font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-lg tracking-tight flex-shrink-0 mt-0.5">
+                <span className="font-mono text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-lg tracking-tight flex-shrink-0 mt-0.5">
                   v{release.version}
                 </span>
                 <div className="min-w-0">
-                  <Dialog.Title className="text-lg font-bold text-slate-900 leading-tight truncate">
+                  <Dialog.Title className="text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
                     {release.title}
                   </Dialog.Title>
                   <div className="mt-1">
@@ -193,7 +193,7 @@ export default function ReleaseDetailModal({
                 </div>
               </div>
               <Dialog.Close asChild>
-                <button className="flex-shrink-0 p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150">
+                <button className="flex-shrink-0 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150">
                   <X className="w-4 h-4" />
                 </button>
               </Dialog.Close>
@@ -213,34 +213,34 @@ export default function ReleaseDetailModal({
 
             {/* Meta info */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <Calendar className="w-4 h-4 text-slate-500" />
+              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Calendar className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                     Release Date
                   </p>
-                  <p className="text-sm font-medium text-slate-800 mt-0.5">
+                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-0.5">
                     {release.release_date ? formatDate(release.release_date) : "TBD"}
                   </p>
                 </div>
               </div>
               {release.owner && (
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center flex-shrink-0 shadow-sm">
                     <span className="text-white text-xs font-semibold leading-none">
                       {getInitials(release.owner.display_name)}
                     </span>
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                       Owner
                     </p>
-                    <p className="text-sm font-medium text-slate-800 mt-0.5 truncate">
+                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200 mt-0.5 truncate">
                       {release.owner.display_name}
                     </p>
-                    <p className="text-xs text-slate-500 truncate">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                       {release.owner.email}
                     </p>
                   </div>
@@ -256,7 +256,7 @@ export default function ReleaseDetailModal({
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {release.repositories.map((repo) => (
-                    <span key={repo.id} className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
+                    <span key={repo.id} className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                       {repo.name}
                     </span>
                   ))}
@@ -269,7 +269,7 @@ export default function ReleaseDetailModal({
                 <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">
                   Description
                 </p>
-                <p className="text-sm text-slate-700 leading-relaxed">
+                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                   {release.description}
                 </p>
               </div>
@@ -281,11 +281,11 @@ export default function ReleaseDetailModal({
                 Changelog
               </p>
               {release.changelog ? (
-                <pre className="text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-xl p-4 whitespace-pre-wrap font-mono leading-relaxed overflow-auto max-h-48">
+                <pre className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4 whitespace-pre-wrap font-mono leading-relaxed overflow-auto max-h-48">
                   {release.changelog}
                 </pre>
               ) : (
-                <div className="flex items-center gap-2 py-4 px-4 bg-slate-50 border border-dashed border-slate-200 rounded-xl">
+                <div className="flex items-center gap-2 py-4 px-4 bg-slate-50 dark:bg-slate-800/50 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
                   <span className="text-slate-400 text-sm italic">
                     No changelog yet
                   </span>
@@ -294,7 +294,7 @@ export default function ReleaseDetailModal({
             </div>
 
             {/* Timestamps */}
-            <div className="flex items-center gap-4 text-xs text-slate-400 pt-1 border-t border-slate-100">
+            <div className="flex items-center gap-4 text-xs text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
                 <span>Created {formatDateTime(release.created_at)}</span>
@@ -306,10 +306,10 @@ export default function ReleaseDetailModal({
 
           {/* Footer actions */}
           {canManage && !isTerminal && (
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex items-center justify-between gap-3">
+            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-800 rounded-b-2xl flex items-center justify-between gap-3">
               <button
                 onClick={handleCancel}
-                className="flex items-center gap-1.5 text-sm font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-2 rounded-lg transition-colors duration-150"
+                className="flex items-center gap-1.5 text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/80 px-3 py-2 rounded-lg transition-colors duration-150"
               >
                 <Ban className="w-4 h-4" />
                 Cancel Release

@@ -80,17 +80,17 @@ function LoginScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4 transition-colors duration-300">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-8 text-center space-y-6">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-8 text-center space-y-6 transition-colors duration-300">
           <div className="flex items-center justify-center">
             <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
               <span className="text-white text-2xl font-bold">IP</span>
             </div>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Internal Platform</h1>
-            <p className="text-slate-500 mt-1 text-sm">Sign in to continue</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Internal Platform</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Sign in to continue</p>
           </div>
 
           <div className="space-y-3">
@@ -110,16 +110,16 @@ function LoginScreen() {
 
             {/* Divider */}
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-slate-100" />
-              <span className="text-xs text-slate-400">or</span>
-              <div className="flex-1 h-px bg-slate-100" />
+              <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800" />
+              <span className="text-xs text-slate-400 dark:text-slate-500">or</span>
+              <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800" />
             </div>
 
             {/* Zoho */}
             <button
               onClick={handleZohoLogin}
               disabled={zohoLoading}
-              className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-medium py-3 px-4 rounded-xl transition-colors duration-150 shadow-sm border border-slate-200 disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium py-3 px-4 rounded-xl transition-colors duration-150 shadow-sm border border-slate-200 dark:border-slate-700 disabled:opacity-60"
             >
               <svg viewBox="0 0 40 40" className="w-5 h-5 flex-shrink-0" fill="none">
                 <rect width="40" height="40" rx="8" fill="#E42527"/>
@@ -129,7 +129,7 @@ function LoginScreen() {
             </button>
           </div>
 
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
             Internal Platform · TekYantra
           </p>
         </div>

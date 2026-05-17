@@ -39,7 +39,7 @@ const LEAVE_TYPE_OPTIONS: LeaveTypeOption[] = [
     icon: CalendarDays,
     description: "Planned vacation or personal time",
     color: "text-indigo-500",
-    selectedColor: "border-indigo-500 bg-indigo-50",
+    selectedColor: "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/50",
   },
   {
     value: "SICK",
@@ -47,7 +47,7 @@ const LEAVE_TYPE_OPTIONS: LeaveTypeOption[] = [
     icon: Stethoscope,
     description: "Medical illness or injury",
     color: "text-rose-500",
-    selectedColor: "border-rose-400 bg-rose-50",
+    selectedColor: "border-rose-400 bg-rose-50 dark:bg-rose-950/50",
   },
   {
     value: "UNPAID",
@@ -55,7 +55,7 @@ const LEAVE_TYPE_OPTIONS: LeaveTypeOption[] = [
     icon: DollarSign,
     description: "Leave without pay",
     color: "text-amber-500",
-    selectedColor: "border-amber-400 bg-amber-50",
+    selectedColor: "border-amber-400 bg-amber-50 dark:bg-amber-950/50",
   },
   {
     value: "PARENTAL",
@@ -63,7 +63,7 @@ const LEAVE_TYPE_OPTIONS: LeaveTypeOption[] = [
     icon: Baby,
     description: "Maternity, paternity or adoption",
     color: "text-emerald-500",
-    selectedColor: "border-emerald-400 bg-emerald-50",
+    selectedColor: "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/50",
   },
   {
     value: "BEREAVEMENT",
@@ -71,7 +71,7 @@ const LEAVE_TYPE_OPTIONS: LeaveTypeOption[] = [
     icon: Heart,
     description: "Loss of a family member",
     color: "text-purple-500",
-    selectedColor: "border-purple-400 bg-purple-50",
+    selectedColor: "border-purple-400 bg-purple-50 dark:bg-purple-950/50",
   },
   {
     value: "WFH",
@@ -79,7 +79,7 @@ const LEAVE_TYPE_OPTIONS: LeaveTypeOption[] = [
     icon: Laptop,
     description: "Working remotely",
     color: "text-cyan-500",
-    selectedColor: "border-cyan-400 bg-cyan-50",
+    selectedColor: "border-cyan-400 bg-cyan-50 dark:bg-cyan-950/50",
   },
 ];
 
@@ -240,7 +240,7 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
         <Dialog.Content
           className={cn(
             "fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2",
-            "bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden",
+            "bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
             "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
@@ -249,12 +249,12 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
           )}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100">
+          <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div>
-              <Dialog.Title className="text-lg font-semibold text-slate-900">
+              <Dialog.Title className="text-lg font-semibold text-slate-900 dark:text-white">
                 {initialData ? "Edit Leave Request" : "Request Leave"}
               </Dialog.Title>
-              <Dialog.Description className="text-sm text-slate-500 mt-0.5">
+              <Dialog.Description className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                 {initialData
                   ? "Modify your leave request details."
                   : "Fill in the details to submit your leave request."}
@@ -262,7 +262,7 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
             </div>
             <Dialog.Close asChild>
               <button
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
@@ -272,14 +272,14 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
 
           {/* Success overlay */}
           {submitStatus === "success" && (
-            <div className="absolute inset-0 z-10 bg-white/95 flex flex-col items-center justify-center gap-3 rounded-2xl">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
-                <CheckCircle2 className="w-7 h-7 text-emerald-600" />
+            <div className="absolute inset-0 z-10 bg-white/95 dark:bg-slate-900/95 flex flex-col items-center justify-center gap-3 rounded-2xl backdrop-blur-sm">
+              <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950/80 flex items-center justify-center border border-emerald-200 dark:border-emerald-800">
+                <CheckCircle2 className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <p className="text-base font-semibold text-slate-900">
+              <p className="text-base font-semibold text-slate-900 dark:text-white">
                 {initialData ? "Leave request updated!" : "Leave request submitted!"}
               </p>
-              <p className="text-sm text-slate-500">Your manager will review it shortly.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Your manager will review it shortly.</p>
             </div>
           )}
 
@@ -289,18 +289,19 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
 
               {/* Leave Type */}
               {/* Leave Type */}
+              {/* Leave Type */}
               <div>
-                <label htmlFor={`${formId}-leave-type`} className="block text-sm font-medium text-slate-700 mb-1.5">
+                <label htmlFor={`${formId}-leave-type`} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                   Leave Type <span className="text-rose-500">*</span>
                 </label>
                 <select
                   id={`${formId}-leave-type`}
                   value={leaveType}
                   onChange={(e) => setLeaveType(e.target.value as LeaveType)}
-                  className="block w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
+                  className="block w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-indigo-500 dark:focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-900 cursor-pointer"
                 >
                   {LEAVE_TYPE_OPTIONS.map(({ value, label }) => (
-                    <option key={value} value={value}>
+                    <option key={value} value={value} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                       {label}
                     </option>
                   ))}
@@ -310,7 +311,7 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
               {/* Date Range */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor={`${formId}-start`} className="block text-sm font-medium text-slate-700 mb-1.5">
+                  <label htmlFor={`${formId}-start`} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                     Start Date <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -320,11 +321,11 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
                     min={today}
                     value={startDate}
                     onChange={(e) => handleStartDateChange(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150 [color-scheme:light] dark:[color-scheme:dark]"
                   />
                 </div>
                 <div>
-                  <label htmlFor={`${formId}-end`} className="block text-sm font-medium text-slate-700 mb-1.5">
+                  <label htmlFor={`${formId}-end`} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                     End Date <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -335,12 +336,12 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
                     value={endDate}
                     onChange={(e) => handleEndDateChange(e.target.value)}
                     className={cn(
-                      "w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150",
-                      endDateError ? "border-rose-400 ring-1 ring-rose-300" : "border-slate-200",
+                      "w-full rounded-lg border bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150 [color-scheme:light] dark:[color-scheme:dark]",
+                      endDateError ? "border-rose-400 ring-1 ring-rose-300" : "border-slate-200 dark:border-slate-700",
                     )}
                   />
                   {endDateError && (
-                    <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+                    <p className="mt-1 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3 flex-shrink-0" />
                       {endDateError}
                     </p>
@@ -350,9 +351,9 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
 
               {/* Business Days Pill */}
               {businessDays > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 rounded-lg border border-indigo-100">
-                  <CalendarDays className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-                  <span className="text-sm text-indigo-700">
+                <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-950/60 rounded-lg border border-indigo-100 dark:border-indigo-900/80">
+                  <CalendarDays className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0" />
+                  <span className="text-sm text-indigo-700 dark:text-indigo-300">
                     <span className="font-semibold">{businessDays}</span>{" "}
                     business {businessDays === 1 ? "day" : "days"} selected
                   </span>
@@ -361,7 +362,7 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
 
               {/* Reason */}
               <div>
-                <label htmlFor={`${formId}-reason`} className="block text-sm font-medium text-slate-700 mb-1.5">
+                <label htmlFor={`${formId}-reason`} className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                   Reason <span className="text-rose-500">*</span>
                 </label>
                 <textarea
@@ -375,13 +376,13 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
                     if (e.target.value.trim().length >= 10) setReasonError("");
                   }}
                   className={cn(
-                    "w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150",
-                    reasonError ? "border-rose-400 ring-1 ring-rose-300" : "border-slate-200",
+                    "w-full rounded-lg border bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150",
+                    reasonError ? "border-rose-400 ring-1 ring-rose-300" : "border-slate-200 dark:border-slate-700",
                   )}
                 />
                 <div className="mt-1 flex items-center justify-between">
                   {reasonError ? (
-                    <p className="text-xs text-rose-600 flex items-center gap-1">
+                    <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3 flex-shrink-0" />
                       {reasonError}
                     </p>
@@ -391,7 +392,7 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
                   <span
                     className={cn(
                       "text-xs ml-auto",
-                      reason.length < 10 ? "text-slate-400" : "text-emerald-600",
+                      reason.length < 10 ? "text-slate-400 dark:text-slate-500" : "text-emerald-600 dark:text-emerald-400",
                     )}
                   >
                     {reason.length} / 10 min
@@ -401,19 +402,19 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
 
               {/* API Error */}
               {submitStatus === "error" && (
-                <div className="flex items-start gap-2 px-3 py-2.5 bg-rose-50 rounded-lg border border-rose-200">
-                  <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-rose-700">{errorMessage}</p>
+                <div className="flex items-start gap-2 px-3 py-2.5 bg-rose-50 dark:bg-rose-950/80 rounded-lg border border-rose-200 dark:border-rose-800">
+                  <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-rose-700 dark:text-rose-300">{errorMessage}</p>
                 </div>
               )}
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50">
+            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 bg-slate-50 dark:bg-slate-900/80">
               <Dialog.Close asChild>
                 <button
                   type="button"
-                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-200 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-slate-400"
                 >
                   Cancel
                 </button>
@@ -424,8 +425,8 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
                 className={cn(
                   "inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1",
                   isPending || submitStatus === "success"
-                    ? "bg-indigo-400 text-white cursor-not-allowed"
-                    : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200",
+                    ? "bg-indigo-400 dark:bg-indigo-500/50 text-white cursor-not-allowed"
+                    : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200 dark:shadow-none",
                 )}
               >
                 {isPending && <Loader2 className="w-4 h-4 animate-spin" />}

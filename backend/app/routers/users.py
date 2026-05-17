@@ -33,6 +33,7 @@ async def _user_to_out(user: User) -> UserOut:
         display_name=user.display_name,
         department=user.department,
         role=user.role,
+        theme=user.theme,
         is_active=user.is_active,
         points=points,
         created_at=user.created_at,
@@ -86,6 +87,8 @@ async def update_user(
         user.display_name = body.display_name
     if body.department is not None:
         user.department = body.department
+    if body.theme is not None:
+        user.theme = body.theme
     await user.save()
     return await _user_to_out(user)
 

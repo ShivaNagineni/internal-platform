@@ -52,3 +52,34 @@ export function useToggleUserActive() {
   });
 }
 
+export function useCurrentUser() {
+  return useQuery<User>({
+    queryKey: ["currentUser"],
+    queryFn: async () => {
+      const { data } = await api.get<User>("/users/me");
+      return data;
+    },
+  });
+}
+
+export function useUpdateTheme() {
+  const qc = useQueryClient();
+  return useMutation<User, Error, { id: string; theme: "light" | "dark" }>({
+    mutationFn: async ({ id, theme }) => {
+      const { data } = await api.patch<User>(`/users/${id}`, { theme });
+      return data;
+    },
+    onMutate: async ({ theme }) => {
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    },
+    onSuccess: (data) => {
+      qc.setQueryData(["currentUser"], data);
+      qc.invalidateQueries({ queryKey: KEYS.all });
+    },
+  });
+}
+

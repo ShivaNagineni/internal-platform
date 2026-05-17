@@ -22,6 +22,7 @@ class User(Document):
     display_name: str
     department: Optional[str] = None
     role: UserRole = UserRole.EMPLOYEE
+    theme: str = "light"
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

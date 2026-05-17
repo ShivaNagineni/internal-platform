@@ -37,41 +37,41 @@ const COLUMNS: Column[] = [
   {
     status: "PLANNED",
     label: "Planned",
-    headerBg: "bg-slate-100",
-    headerText: "text-slate-700",
-    countBg: "bg-slate-200 text-slate-600",
+    headerBg: "bg-slate-100 dark:bg-slate-800/80",
+    headerText: "text-slate-700 dark:text-slate-200",
+    countBg: "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300",
     emptyText: "No planned releases",
   },
   {
     status: "STAGING",
     label: "In QA",
-    headerBg: "bg-purple-50",
-    headerText: "text-purple-700",
-    countBg: "bg-purple-100 text-purple-600",
+    headerBg: "bg-purple-50 dark:bg-purple-950/50",
+    headerText: "text-purple-700 dark:text-purple-300",
+    countBg: "bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-300",
     emptyText: "Nothing in QA",
   },
   {
     status: "IN_PROGRESS",
     label: "Releasing",
-    headerBg: "bg-indigo-50",
-    headerText: "text-indigo-700",
-    countBg: "bg-indigo-100 text-indigo-600",
+    headerBg: "bg-indigo-50 dark:bg-indigo-950/50",
+    headerText: "text-indigo-700 dark:text-indigo-300",
+    countBg: "bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-300",
     emptyText: "Nothing releasing",
   },
   {
     status: "RELEASED",
     label: "Released",
-    headerBg: "bg-emerald-50",
-    headerText: "text-emerald-700",
-    countBg: "bg-emerald-100 text-emerald-600",
+    headerBg: "bg-emerald-50 dark:bg-emerald-950/50",
+    headerText: "text-emerald-700 dark:text-emerald-300",
+    countBg: "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-300",
     emptyText: "No releases yet",
   },
   {
     status: "CANCELLED",
     label: "Cancelled",
-    headerBg: "bg-rose-50",
-    headerText: "text-rose-700",
-    countBg: "bg-rose-100 text-rose-600",
+    headerBg: "bg-rose-50 dark:bg-rose-950/50",
+    headerText: "text-rose-700 dark:text-rose-300",
+    countBg: "bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-300",
     emptyText: "No cancellations",
   },
 ];
@@ -104,26 +104,28 @@ function useCurrentUserRole(): UserRole {
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 space-y-3 animate-pulse">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm p-4 space-y-3 animate-pulse">
       <div className="flex items-center gap-2">
-        <div className="h-5 w-14 bg-slate-100 rounded-md" />
-        <div className="h-5 w-16 bg-slate-100 rounded-full" />
+        <div className="h-5 w-14 bg-slate-100 dark:bg-slate-800 rounded-md" />
+        <div className="h-5 w-16 bg-slate-100 dark:bg-slate-800 rounded-full" />
       </div>
-      <div className="h-4 w-3/4 bg-slate-100 rounded" />
-      <div className="h-3 w-full bg-slate-100 rounded" />
-      <div className="h-3 w-2/3 bg-slate-100 rounded" />
-      <div className="h-2 w-full bg-slate-100 rounded-full mt-4" />
+      <div className="h-4 w-3/4 bg-slate-100 dark:bg-slate-800 rounded" />
+      <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded" />
+      <div className="h-3 w-2/3 bg-slate-100 dark:bg-slate-800 rounded" />
+      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full mt-4" />
     </div>
   );
 }
 
-function SkeletonColumn({ count = 2 }: { count?: number }) {
+function SkeletonStatusRow() {
   return (
-    <div className="flex-shrink-0 w-72 space-y-3">
-      <div className="h-10 bg-slate-100 rounded-xl animate-pulse" />
-      {Array.from({ length: count }).map((_, i) => (
-        <SkeletonCard key={i} />
-      ))}
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4 animate-pulse">
+      <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl w-full max-w-xs" />
+      <div className="flex gap-4 overflow-hidden">
+        <div className="w-80 flex-shrink-0"><SkeletonCard /></div>
+        <div className="w-80 flex-shrink-0"><SkeletonCard /></div>
+        <div className="w-80 flex-shrink-0"><SkeletonCard /></div>
+      </div>
     </div>
   );
 }
@@ -142,7 +144,7 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm px-5 py-4 flex items-center gap-4">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm px-5 py-4 flex items-center gap-4">
       <div
         className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
@@ -152,16 +154,16 @@ function StatCard({
         <Icon className="w-5 h-5 text-white" />
       </div>
       <div>
-        <p className="text-2xl font-bold text-slate-900 leading-none">{value}</p>
-        <p className="text-xs text-slate-500 mt-0.5">{label}</p>
+        <p className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{value}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
       </div>
     </div>
   );
 }
 
-// ─── Pipeline column ──────────────────────────────────────────────────────────
+// ─── Status row (single line pipeline) ────────────────────────────────────────
 
-interface PipelineColumnProps {
+interface StatusRowProps {
   column: Column;
   releases: Release[];
   currentUserRole: UserRole;
@@ -172,7 +174,7 @@ interface PipelineColumnProps {
   onClick: (release: Release) => void;
 }
 
-function PipelineColumn({
+function StatusRow({
   column,
   releases,
   currentUserRole,
@@ -181,13 +183,13 @@ function PipelineColumn({
   onDeploy,
   onApproveRelease,
   onClick,
-}: PipelineColumnProps) {
+}: StatusRowProps) {
   return (
-    <div className="flex-shrink-0 w-72 flex flex-col">
-      {/* Column header */}
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 flex flex-col gap-4">
+      {/* Row header */}
       <div
         className={cn(
-          "flex items-center justify-between px-3 py-2.5 rounded-xl mb-3",
+          "flex items-center justify-between px-4 py-3 rounded-xl",
           column.headerBg
         )}
       >
@@ -196,7 +198,7 @@ function PipelineColumn({
         </span>
         <span
           className={cn(
-            "text-xs font-bold px-2 py-0.5 rounded-full",
+            "text-xs font-bold px-2.5 py-0.5 rounded-full",
             column.countBg
           )}
         >
@@ -204,24 +206,25 @@ function PipelineColumn({
         </span>
       </div>
 
-      {/* Cards */}
-      <div className="flex flex-col gap-3 flex-1">
+      {/* Cards in horizontal line */}
+      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
         {releases.length === 0 ? (
-          <div className="flex items-center justify-center py-10 text-xs text-slate-400 border border-dashed border-slate-200 rounded-xl bg-white">
+          <div className="w-full py-10 text-center text-xs text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/40">
             {column.emptyText}
           </div>
         ) : (
           releases.map((release) => (
-            <ReleaseCard
-              key={release.id}
-              release={release}
-              currentUserRole={currentUserRole}
-              onEdit={onEdit}
-              onStatusAdvance={onStatusAdvance}
-              onDeploy={onDeploy}
-              onApproveRelease={onApproveRelease}
-              onClick={onClick}
-            />
+            <div key={release.id} className="w-80 flex-shrink-0">
+              <ReleaseCard
+                release={release}
+                currentUserRole={currentUserRole}
+                onEdit={onEdit}
+                onStatusAdvance={onStatusAdvance}
+                onDeploy={onDeploy}
+                onApproveRelease={onApproveRelease}
+                onClick={onClick}
+              />
+            </div>
           ))
         )}
       </div>
@@ -285,6 +288,11 @@ export default function ReleasesPage() {
     return releases.filter((r) => r.status === statusFilter);
   }, [releases, statusFilter]);
 
+  const displayedColumns = useMemo(() => {
+    if (statusFilter === "ALL") return COLUMNS;
+    return COLUMNS.filter((col) => col.status === statusFilter);
+  }, [statusFilter]);
+
   const releasesByStatus = useMemo<Record<ReleaseStatus, Release[]>>(() => {
     const grouped: Record<ReleaseStatus, Release[]> = {
       PLANNED: [],
@@ -320,11 +328,11 @@ export default function ReleasesPage() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             Release Control
             <Rocket className="w-5 h-5 text-indigo-500" />
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Track software releases through the delivery pipeline.
           </p>
         </div>
@@ -345,7 +353,7 @@ export default function ReleasesPage() {
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="h-20 bg-slate-100 rounded-xl animate-pulse"
+              className="h-20 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse"
             />
           ))}
         </div>
@@ -376,14 +384,14 @@ export default function ReleasesPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
 
         {/* View mode toggle */}
-        <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl p-1">
           <button
             onClick={() => setViewMode("pipeline")}
             className={cn(
               "flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all duration-150",
               viewMode === "pipeline"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             )}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -394,8 +402,8 @@ export default function ReleasesPage() {
             className={cn(
               "flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all duration-150",
               viewMode === "timeline"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             )}
           >
             <GitBranch className="w-3.5 h-3.5" />
@@ -413,7 +421,7 @@ export default function ReleasesPage() {
                 "text-xs font-medium px-3 py-1.5 rounded-full border transition-colors duration-150",
                 statusFilter === value
                   ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50"
               )}
             >
               {label}
@@ -424,17 +432,17 @@ export default function ReleasesPage() {
 
       {/* ── Pipeline view ─────────────────────────────────────────────────── */}
       {viewMode === "pipeline" && (
-        <div className="overflow-x-auto pb-4">
+        <div className="space-y-6 pb-4">
           {isLoading ? (
-            <div className="flex gap-4 min-w-max">
-              {COLUMNS.map((col) => (
-                <SkeletonColumn key={col.status} count={col.status === "PLANNED" ? 3 : 1} />
+            <div className="space-y-6">
+              {displayedColumns.map((col) => (
+                <SkeletonStatusRow key={col.status} />
               ))}
             </div>
           ) : (
-            <div className="flex gap-4 min-w-max">
-              {COLUMNS.map((column) => (
-                <PipelineColumn
+            <div className="space-y-6">
+              {displayedColumns.map((column) => (
+                <StatusRow
                   key={column.status}
                   column={column}
                   releases={releasesByStatus[column.status]}
@@ -453,11 +461,11 @@ export default function ReleasesPage() {
 
       {/* ── Timeline view ─────────────────────────────────────────────────── */}
       {viewMode === "timeline" && (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
           {isLoading ? (
             <div className="py-8 px-6 space-y-4">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />
+                <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
               ))}
             </div>
           ) : (
