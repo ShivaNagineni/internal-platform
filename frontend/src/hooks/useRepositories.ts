@@ -59,3 +59,16 @@ export function useDeleteRepository() {
     },
   });
 }
+
+export function useSyncReposFromGitHub() {
+  const qc = useQueryClient();
+  return useMutation<Repository[], Error, void>({
+    mutationFn: async () => {
+      const { data } = await api.post<Repository[]>("/repositories/sync-from-github");
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEYS.all });
+    },
+  });
+}

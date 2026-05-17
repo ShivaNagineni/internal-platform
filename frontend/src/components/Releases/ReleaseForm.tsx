@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { X, AlertCircle, Loader2, ChevronDown, GitBranch, Check } from "lucide-react";
+import { X, AlertCircle, Loader2, ChevronDown, GitBranch, Check, RefreshCw } from "lucide-react";
 import type { Release, Repository } from "@/types";
 import { cn } from "@/lib/utils";
 import { useCreateRelease, useUpdateRelease } from "@/hooks/useReleases";
-import { useRepositories } from "@/hooks/useRepositories";
+import { useRepositories, useSyncReposFromGitHub } from "@/hooks/useRepositories";
 
 // ─── Semver validation ────────────────────────────────────────────────────────
 
@@ -101,11 +101,15 @@ function RepoMultiSelect({
   selected,
   onChange,
   disabled,
+  onSync,
+  isSyncing,
 }: {
   repositories: Repository[];
   selected: string[];
   onChange: (ids: string[]) => void;
   disabled?: boolean;
+  onSync?: () => void;
+  isSyncing?: boolean;
 }) {
   const selectedRepos = repositories.filter((r) => selected.includes(r.id));
 
@@ -156,8 +160,19 @@ function RepoMultiSelect({
           className="z-[60] w-[var(--radix-dropdown-menu-trigger-width)] min-w-[220px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden"
         >
           {repositories.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-slate-400 dark:text-slate-500 italic">
-              No repositories configured.
+            <div className="px-4 py-4 flex flex-col items-center gap-2 text-center">
+              <p className="text-sm text-slate-500 dark:text-slate-400">No repositories yet.</p>
+              {onSync && (
+                <button
+                  type="button"
+                  onClick={onSync}
+                  disabled={isSyncing}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-950 rounded-lg transition-colors duration-150 disabled:opacity-60"
+                >
+                  <RefreshCw className={cn("w-3 h-3", isSyncing && "animate-spin")} />
+                  {isSyncing ? "Fetching from GitHub…" : "Fetch from GitHub"}
+                </button>
+              )}
             </div>
           ) : (
             <div className="p-1 max-h-52 overflow-y-auto">
@@ -217,6 +232,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
   const createRelease = useCreateRelease();
   const updateRelease = useUpdateRelease();
   const { data: repositories = [] } = useRepositories();
+  const syncRepos = useSyncReposFromGitHub();
 
   const [form, setForm] = useState<FormState>(() => getInitialState(release));
   const [errors, setErrors] = useState<FormErrors>({});
@@ -409,6 +425,8 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
                   selected={form.repository_ids}
                   onChange={(ids) => setField("repository_ids", ids)}
                   disabled={isBusy}
+                  onSync={() => syncRepos.mutate()}
+                  isSyncing={syncRepos.isPending}
                 />
               </Field>
 
