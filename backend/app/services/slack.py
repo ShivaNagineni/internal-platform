@@ -143,7 +143,7 @@ class SlackService:
             {"type": "divider"},
         ]
 
-    async def send_release_webhook(self, release, user) -> None:
+    async def send_release_webhook(self, release, user=None) -> None:
         url = settings.slack_webhook_url
         if not url:
             return
@@ -151,7 +151,7 @@ class SlackService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(url, json={"blocks": blocks})
-                print(f"[SLACK WEBHOOK] Posted release {release.id}, status={resp.status_code}")
+                print(f"[SLACK WEBHOOK] Posted release {release.id} ({release.status.value}), status={resp.status_code}")
         except Exception as e:
             print(f"[SLACK WEBHOOK ERROR] send_release_webhook failed: {e}")
 
@@ -173,9 +173,9 @@ class SlackService:
                 "fields": [
                     {"type": "mrkdwn", "text": f"*Title:*\n{release.title}"},
                     {"type": "mrkdwn", "text": f"*Version:*\n{release.version}"},
-                    {"type": "mrkdwn", "text": f"*Owner:*\n{user.display_name}"},
+                    {"type": "mrkdwn", "text": f"*Owner:*\n{user.display_name if user else 'GitHub'}"},
                     {"type": "mrkdwn", "text": f"*Status:*\n{release.status.value}"},
-                    {"type": "mrkdwn", "text": f"*Release Date:*\n{release.release_date}"},
+                    {"type": "mrkdwn", "text": f"*Release Date:*\n{release.release_date or 'TBD'}"},
                 ],
             },
             {"type": "divider"},
@@ -187,7 +187,7 @@ class SlackService:
                 "elements": [
                     {
                         "type": "button",
-                        "text": {"type": "plain_text", "text": "Start Deployment", "emoji": True},
+                        "text": {"type": "plain_text", "text": "Approve Deployment", "emoji": True},
                         "style": "primary",
                         "value": f"start_release:{release.id}",
                         "action_id": "release_start",
@@ -195,7 +195,7 @@ class SlackService:
                 ],
             })
             blocks.append({"type": "divider"})
-        elif release.status.value == "STAGING":
+        elif release.status.value in ("STAGING", "IN_PROGRESS"):
             blocks.append({
                 "type": "actions",
                 "elements": [

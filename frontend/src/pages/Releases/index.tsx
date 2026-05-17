@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type { Release, ReleaseStatus, UserRole } from "@/types";
 import { cn } from "@/lib/utils";
-import { useReleases, useUpdateRelease } from "@/hooks/useReleases";
+import { useReleases, useUpdateRelease, useDeployRelease, useApproveRelease } from "@/hooks/useReleases";
 import ReleaseCard from "@/components/Releases/ReleaseCard";
 import ReleaseDetailModal from "@/components/Releases/ReleaseDetailModal";
 import ReleaseForm from "@/components/Releases/ReleaseForm";
@@ -43,20 +43,20 @@ const COLUMNS: Column[] = [
     emptyText: "No planned releases",
   },
   {
-    status: "IN_PROGRESS",
-    label: "In Progress",
-    headerBg: "bg-indigo-50",
-    headerText: "text-indigo-700",
-    countBg: "bg-indigo-100 text-indigo-600",
-    emptyText: "Nothing in progress",
-  },
-  {
     status: "STAGING",
-    label: "Staging",
+    label: "In QA",
     headerBg: "bg-purple-50",
     headerText: "text-purple-700",
     countBg: "bg-purple-100 text-purple-600",
-    emptyText: "Nothing in staging",
+    emptyText: "Nothing in QA",
+  },
+  {
+    status: "IN_PROGRESS",
+    label: "Releasing",
+    headerBg: "bg-indigo-50",
+    headerText: "text-indigo-700",
+    countBg: "bg-indigo-100 text-indigo-600",
+    emptyText: "Nothing releasing",
   },
   {
     status: "RELEASED",
@@ -79,8 +79,8 @@ const COLUMNS: Column[] = [
 const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
   { value: "ALL", label: "All" },
   { value: "PLANNED", label: "Planned" },
-  { value: "IN_PROGRESS", label: "In Progress" },
-  { value: "STAGING", label: "Staging" },
+  { value: "STAGING", label: "In QA" },
+  { value: "IN_PROGRESS", label: "Releasing" },
   { value: "RELEASED", label: "Released" },
   { value: "CANCELLED", label: "Cancelled" },
 ];
@@ -167,6 +167,8 @@ interface PipelineColumnProps {
   currentUserRole: UserRole;
   onEdit: (release: Release) => void;
   onStatusAdvance: (id: string, status: ReleaseStatus) => void;
+  onDeploy: (id: string) => void;
+  onApproveRelease: (id: string) => void;
   onClick: (release: Release) => void;
 }
 
@@ -176,6 +178,8 @@ function PipelineColumn({
   currentUserRole,
   onEdit,
   onStatusAdvance,
+  onDeploy,
+  onApproveRelease,
   onClick,
 }: PipelineColumnProps) {
   return (
@@ -214,6 +218,8 @@ function PipelineColumn({
               currentUserRole={currentUserRole}
               onEdit={onEdit}
               onStatusAdvance={onStatusAdvance}
+              onDeploy={onDeploy}
+              onApproveRelease={onApproveRelease}
               onClick={onClick}
             />
           ))
@@ -232,6 +238,8 @@ export default function ReleasesPage() {
   // Data
   const { data: releases = [], isLoading } = useReleases();
   const updateRelease = useUpdateRelease();
+  const deployRelease = useDeployRelease();
+  const approveRelease = useApproveRelease();
 
   // UI state
   const [viewMode, setViewMode] = useState<ViewMode>("pipeline");
@@ -260,6 +268,14 @@ export default function ReleasesPage() {
 
   function handleStatusChange(id: string, status: ReleaseStatus) {
     updateRelease.mutate({ id, payload: { status } });
+  }
+
+  function handleDeploy(id: string) {
+    deployRelease.mutate(id);
+  }
+
+  function handleApproveRelease(id: string) {
+    approveRelease.mutate(id);
   }
 
   // ─── Derived data ────────────────────────────────────────────────────────────
@@ -292,7 +308,7 @@ export default function ReleasesPage() {
   const releasedThisYear = releases.filter(
     (r) =>
       r.status === "RELEASED" &&
-      // Parse as local midnight to avoid UTC date-shift in behind-UTC timezones
+      r.release_date != null &&
       new Date(`${r.release_date}T00:00:00`).getFullYear() === currentYear
   ).length;
 
@@ -425,6 +441,8 @@ export default function ReleasesPage() {
                   currentUserRole={currentUserRole}
                   onEdit={handleEdit}
                   onStatusAdvance={handleStatusChange}
+                  onDeploy={handleDeploy}
+                  onApproveRelease={handleApproveRelease}
                   onClick={handleCardClick}
                 />
               ))}
@@ -463,6 +481,8 @@ export default function ReleasesPage() {
         }}
         currentUserRole={currentUserRole}
         onStatusChange={handleStatusChange}
+        onDeploy={handleDeploy}
+        onApproveRelease={handleApproveRelease}
       />
 
       {/* Create / Edit form modal */}

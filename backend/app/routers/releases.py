@@ -87,6 +87,17 @@ async def create_release(
     )
     await release.insert()
 
+    # Auto-create dev→qa PR so the release is tracked on GitHub from day one
+    from app.services.github_api import create_dev_to_qa_pr
+    pr_result = await create_dev_to_qa_pr(
+        version=payload.version,
+        title=payload.title,
+        description=payload.description,
+    )
+    if pr_result:
+        release.pr_number = pr_result["pr_number"]
+        await release.save()
+
     from app.services.notification_service import notify_release_status_change
     background_tasks.add_task(notify_release_status_change, str(release.id))
 
@@ -153,6 +164,80 @@ async def update_release(
     await release.save()
 
     if status_changed:
+        from app.services.notification_service import notify_release_status_change
+        background_tasks.add_task(notify_release_status_change, str(release.id))
+
+    return await _release_to_out(release)
+
+
+# ---------------------------------------------------------------------------
+# POST /releases/{id}/deploy  — approve deployment (merges dev→qa PR)
+# ---------------------------------------------------------------------------
+@router.post("/{release_id}/deploy", response_model=ReleaseOut)
+async def deploy_release(
+    release_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(require_manager),
+):
+    release = await Release.get(release_id)
+    if release is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Release not found")
+    if release.status != ReleaseStatus.PLANNED:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Release must be PLANNED to approve deployment")
+
+    if release.pr_number:
+        from app.services.github_api import merge_pr
+        from app.core.config import get_settings as _settings
+        repos = _settings().get_github_repos()
+        merged = any([await merge_pr(repo, release.pr_number) for repo in repos])
+        if not merged:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Could not merge the PR — check GitHub logs")
+        # Status advances to STAGING via GitHub webhook after the merge fires
+    else:
+        # Manually created release — advance to STAGING directly
+        now = datetime.now(UTC)
+        release.status = ReleaseStatus.STAGING
+        release.updated_at = now
+        if not release.status_history:
+            release.status_history = [ReleaseStatusEntry(status=ReleaseStatus.PLANNED, changed_at=release.created_at)]
+        release.status_history.append(ReleaseStatusEntry(status=ReleaseStatus.STAGING, changed_at=now))
+        await release.save()
+        from app.services.notification_service import notify_release_status_change
+        background_tasks.add_task(notify_release_status_change, str(release.id))
+
+    return await _release_to_out(release)
+
+
+# ---------------------------------------------------------------------------
+# POST /releases/{id}/approve-release  — merges Qa→main PR
+# ---------------------------------------------------------------------------
+@router.post("/{release_id}/approve-release", response_model=ReleaseOut)
+async def approve_release(
+    release_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(require_manager),
+):
+    release = await Release.get(release_id)
+    if release is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Release not found")
+    if release.status not in {ReleaseStatus.STAGING, ReleaseStatus.IN_PROGRESS}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Release must be STAGING or IN_PROGRESS to approve")
+
+    if release.main_pr_number:
+        from app.services.github_api import merge_pr
+        from app.core.config import get_settings as _settings
+        repos = _settings().get_github_repos()
+        merged = any([await merge_pr(repo, release.main_pr_number) for repo in repos])
+        if not merged:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Could not merge the PR — check GitHub logs")
+    else:
+        now = datetime.now(UTC)
+        release.status = ReleaseStatus.RELEASED
+        release.updated_at = now
+        if not release.status_history:
+            release.status_history = [ReleaseStatusEntry(status=ReleaseStatus.PLANNED, changed_at=release.created_at)]
+        release.status_history.append(ReleaseStatusEntry(status=ReleaseStatus.RELEASED, changed_at=now))
+        await release.save()
         from app.services.notification_service import notify_release_status_change
         background_tasks.add_task(notify_release_status_change, str(release.id))
 

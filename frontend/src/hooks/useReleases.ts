@@ -77,6 +77,42 @@ export function useUpdateRelease() {
 }
 
 // ---------------------------------------------------------------------------
+// POST /releases/{id}/deploy  — approve deployment (merges dev→qa PR)
+// ---------------------------------------------------------------------------
+export function useDeployRelease() {
+  const queryClient = useQueryClient();
+
+  return useMutation<Release, Error, string>({
+    mutationFn: async (id) => {
+      const { data } = await api.post<Release>(`/releases/${id}/deploy`);
+      return data;
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: releaseKeys.all });
+      queryClient.invalidateQueries({ queryKey: releaseKeys.detail(id) });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// POST /releases/{id}/approve-release  — merges Qa→main PR
+// ---------------------------------------------------------------------------
+export function useApproveRelease() {
+  const queryClient = useQueryClient();
+
+  return useMutation<Release, Error, string>({
+    mutationFn: async (id) => {
+      const { data } = await api.post<Release>(`/releases/${id}/approve-release`);
+      return data;
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: releaseKeys.all });
+      queryClient.invalidateQueries({ queryKey: releaseKeys.detail(id) });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
 // DELETE /releases/{id}
 // ---------------------------------------------------------------------------
 export function useDeleteRelease() {

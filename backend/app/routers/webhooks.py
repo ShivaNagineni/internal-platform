@@ -106,7 +106,7 @@ async def _handle_github_pr(payload: dict) -> None:
 
     action = payload.get("action")
     pr = payload.get("pull_request", {})
-    base_branch = pr.get("base", {}).get("ref", "")
+    base_branch = pr.get("base", {}).get("ref", "").lower()
     head_branch = pr.get("head", {}).get("ref", "")
     pr_title = pr.get("title", "")
     merged = pr.get("merged", False)
@@ -116,7 +116,9 @@ async def _handle_github_pr(payload: dict) -> None:
         logger.info("GitHub PR has no version pattern, skipping: %s", pr_title)
         return
 
-    version = version_match.group(0)
+    version = version_match.group(0).lstrip("v")
+
+    from app.services.notification_service import notify_release_status_change
 
     if action == "opened" and base_branch == "qa":
         existing = await Release.find_one(Release.version == version)
@@ -128,9 +130,11 @@ async def _handle_github_pr(payload: dict) -> None:
             version=version,
             status=ReleaseStatus.PLANNED,
             status_history=[ReleaseStatusEntry(status=ReleaseStatus.PLANNED, changed_at=now)],
+            pr_number=pr.get("number"),
         )
         await release.insert()
         logger.info("Created release %s from GitHub PR", version)
+        await notify_release_status_change(str(release.id))
 
     elif action == "closed" and merged and base_branch == "qa":
         release = await Release.find_one(Release.version == version)
@@ -138,13 +142,17 @@ async def _handle_github_pr(payload: dict) -> None:
             advanced = await _advance_release_status(release, ReleaseStatus.STAGING)
             if advanced:
                 logger.info("Release %s advanced to STAGING", version)
+                await notify_release_status_change(str(release.id))
 
     elif action == "opened" and base_branch in ("main", "master"):
         release = await Release.find_one(Release.version == version)
         if release:
+            release.main_pr_number = pr.get("number")
+            await release.save()
             advanced = await _advance_release_status(release, ReleaseStatus.IN_PROGRESS)
             if advanced:
                 logger.info("Release %s advanced to IN_PROGRESS", version)
+                await notify_release_status_change(str(release.id))
 
     elif action == "closed" and merged and base_branch in ("main", "master"):
         release = await Release.find_one(Release.version == version)
@@ -152,6 +160,7 @@ async def _handle_github_pr(payload: dict) -> None:
             advanced = await _advance_release_status(release, ReleaseStatus.RELEASED)
             if advanced:
                 logger.info("Release %s advanced to RELEASED", version)
+                await notify_release_status_change(str(release.id))
 
 
 @router.post("/github")
@@ -303,37 +312,74 @@ async def _handle_block_action(payload: dict) -> None:
                 if release.status != ReleaseStatus.PLANNED:
                     print(f"[SLACK ACTION] Release {release_id_str} not in PLANNED ({release.status.value})")
                     return
-                new_status = ReleaseStatus.IN_PROGRESS
-                action_str = "Started Development (In Progress)"
-            elif action_id == "release_approve" or action_id.startswith("release_approve_"):
-                if release.status != ReleaseStatus.STAGING:
-                    print(f"[SLACK ACTION] Release {release_id_str} not in STAGING ({release.status.value})")
-                    return
-                new_status = ReleaseStatus.RELEASED
-                action_str = "Approved for Release"
-            else:
-                if release.status != ReleaseStatus.STAGING:
-                    print(f"[SLACK ACTION] Release {release_id_str} not in STAGING ({release.status.value})")
-                    return
-                new_status = ReleaseStatus.IN_PROGRESS
-                action_str = "Rejected back to In Progress"
 
-            release.status = new_status
-            release.status_history.append(ReleaseStatusEntry(status=new_status, changed_at=datetime.now(UTC)))
-            release.updated_at = datetime.now(UTC)
-            await release.save()
-            print(f"[SLACK ACTION] Successfully updated release {release.id} to {new_status.value}")
-
-            user = await User.get(release.owner_id)
-            if user:
-                from app.services.slack import slack_service
+                # Merge the dev→qa PR; GitHub webhook will advance status to STAGING
                 response_url = payload.get("response_url")
-                blocks = slack_service.build_release_notification(release, user, action_str)
+                if release.pr_number:
+                    from app.services.github_api import merge_pr
+                    repos = settings.get_github_repos()
+                    merged_any = False
+                    for repo in repos:
+                        ok = await merge_pr(repo, release.pr_number)
+                        if ok:
+                            merged_any = True
+                    if response_url:
+                        msg = "✅ Deployment approved — merging to QA. Status will update automatically." if merged_any \
+                            else "❌ Could not merge the PR. Please merge it manually on GitHub."
+                        async with httpx.AsyncClient() as c:
+                            await c.post(response_url, json={"replace_original": True, "text": msg, "blocks": []})
+                else:
+                    # No PR stored (manually created release) — advance to STAGING directly
+                    now = datetime.now(UTC)
+                    release.status = ReleaseStatus.STAGING
+                    release.status_history.append(ReleaseStatusEntry(status=ReleaseStatus.STAGING, changed_at=now))
+                    release.updated_at = now
+                    await release.save()
+                    from app.services.notification_service import notify_release_status_change
+                    await notify_release_status_change(str(release.id))
+                return
 
-                if response_url:
-                    async with httpx.AsyncClient() as client:
-                        resp = await client.post(response_url, json={"replace_original": True, "blocks": blocks})
-                        print(f"[SLACK ACTION] Updated release Slack message via response_url, status={resp.status_code}")
+            elif action_id == "release_approve" or action_id.startswith("release_approve_"):
+                if release.status not in (ReleaseStatus.STAGING, ReleaseStatus.IN_PROGRESS):
+                    print(f"[SLACK ACTION] Release {release_id_str} not in STAGING/IN_PROGRESS ({release.status.value})")
+                    return
+
+                response_url = payload.get("response_url")
+                if release.main_pr_number:
+                    from app.services.github_api import merge_pr
+                    merged_any = False
+                    for repo in settings.get_github_repos():
+                        ok = await merge_pr(repo, release.main_pr_number)
+                        if ok:
+                            merged_any = True
+                    if response_url:
+                        msg = "✅ Release approved — merging to main. Status will update automatically." if merged_any \
+                            else "❌ Could not merge the PR. Please merge it manually on GitHub."
+                        async with httpx.AsyncClient() as c:
+                            await c.post(response_url, json={"replace_original": True, "text": msg, "blocks": []})
+                else:
+                    # No PR stored — advance to RELEASED directly
+                    now = datetime.now(UTC)
+                    release.status = ReleaseStatus.RELEASED
+                    release.status_history.append(ReleaseStatusEntry(status=ReleaseStatus.RELEASED, changed_at=now))
+                    release.updated_at = now
+                    await release.save()
+                    from app.services.notification_service import notify_release_status_change
+                    await notify_release_status_change(str(release.id))
+                return
+
+            else:
+                if release.status not in (ReleaseStatus.STAGING, ReleaseStatus.IN_PROGRESS):
+                    print(f"[SLACK ACTION] Release {release_id_str} not in STAGING/IN_PROGRESS ({release.status.value})")
+                    return
+                new_status = ReleaseStatus.PLANNED
+                action_str = "Rejected — back to Planned"
+
+                release.status = new_status
+                release.status_history.append(ReleaseStatusEntry(status=new_status, changed_at=datetime.now(UTC)))
+                release.updated_at = datetime.now(UTC)
+                await release.save()
+                print(f"[SLACK ACTION] Successfully updated release {release.id} to {new_status.value}")
 
                 from app.services.notification_service import notify_release_status_change
                 await notify_release_status_change(str(release.id))

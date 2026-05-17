@@ -182,10 +182,12 @@ function TimelineNode({ release, isLeft, isLast, onClick }: TimelineNodeProps) {
             <span className="truncate max-w-[140px]">{release.owner.display_name}</span>
           </div>
         )}
-        <div className="flex items-center gap-1.5 ml-auto font-medium text-slate-500">
-          <Clock className="w-3.5 h-3.5 text-slate-400" />
-          <span>{formatDate(release.release_date)}</span>
-        </div>
+        {release.release_date && (
+          <div className="flex items-center gap-1.5 ml-auto font-medium text-slate-500">
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <span>{formatDate(release.release_date)}</span>
+          </div>
+        )}
       </div>
     </button>
   );
@@ -252,7 +254,7 @@ export default function ReleaseTimeline({ releases, onReleaseClick }: Props) {
 
   // Sort by release_date ascending.
   const sorted = [...releases].sort((a, b) =>
-    a.release_date.localeCompare(b.release_date)
+    (a.release_date ?? "").localeCompare(b.release_date ?? "")
   );
 
   return (

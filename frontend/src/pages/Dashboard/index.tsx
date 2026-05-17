@@ -160,9 +160,11 @@ function UpcomingReleaseRow({ release }: { release: Release }) {
         </p>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-[10px] font-mono text-slate-400">{release.version}</span>
-          <span className="text-xs text-slate-400">
-            {format(new Date(`${release.release_date}T00:00:00`), "MMM d, yyyy")}
-          </span>
+          {release.release_date && (
+            <span className="text-xs text-slate-400">
+              {format(new Date(`${release.release_date}T00:00:00`), "MMM d, yyyy")}
+            </span>
+          )}
         </div>
       </div>
       <StatusBadge status={release.status} size="sm" />
@@ -230,7 +232,7 @@ export default function Dashboard() {
   // Next 3 upcoming releases (PLANNED or IN_PROGRESS, sorted by release_date asc)
   const upcomingReleases = (releases ?? [])
     .filter((r) => r.status === "PLANNED" || r.status === "IN_PROGRESS")
-    .sort((a, b) => a.release_date.localeCompare(b.release_date))
+    .sort((a, b) => (a.release_date ?? "").localeCompare(b.release_date ?? ""))
     .slice(0, 3);
 
   return (
