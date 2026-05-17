@@ -391,13 +391,12 @@ async def _handle_block_action(payload: dict) -> None:
                                     if ok:
                                         merged_any = True
                     else:
-                        # Legacy fallback
-                        for pr_num in release.pr_numbers.values():
-                            repos = settings.get_github_repos()
-                            for repo in repos:
-                                ok = await merge_pr(pr_num, github_repo=repo)
-                                if ok:
-                                    merged_any = True
+                        # Legacy fallback — "default" key, repo resolved from settings
+                        pr_num = release.pr_numbers.get("default")
+                        if pr_num:
+                            ok = await merge_pr(pr_num)
+                            if ok:
+                                merged_any = True
                                     
                     if response_url:
                         msg = "✅ Deployment approved — merging to QA. Status will update automatically." if merged_any \
@@ -436,12 +435,12 @@ async def _handle_block_action(payload: dict) -> None:
                                     if ok:
                                         merged_any = True
                     else:
-                        # Legacy fallback
-                        for pr_num in release.main_pr_numbers.values():
-                            for repo in settings.get_github_repos():
-                                ok = await merge_pr(pr_num, github_repo=repo)
-                                if ok:
-                                    merged_any = True
+                        # Legacy fallback — "default" key, repo resolved from settings
+                        pr_num = release.main_pr_numbers.get("default")
+                        if pr_num:
+                            ok = await merge_pr(pr_num)
+                            if ok:
+                                merged_any = True
                                     
                     if response_url:
                         msg = "✅ Release approved — merging to main. Status will update automatically." if merged_any \
