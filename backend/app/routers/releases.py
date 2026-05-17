@@ -122,19 +122,29 @@ async def create_release(
     await release.insert()
 
     from app.services.github_api import create_dev_to_qa_pr
-    
-    for repo in repositories:
+
+    if repositories:
+        for repo in repositories:
+            pr_result = await create_dev_to_qa_pr(
+                version=payload.version,
+                title=payload.title,
+                description=payload.description,
+                github_repo=repo.github_repo,
+                dev_branch=repo.dev_branch,
+                qa_branch=repo.qa_branch,
+            )
+            if pr_result:
+                release.pr_numbers[str(repo.id)] = pr_result["pr_number"]
+    else:
+        # No repos selected — fall back to settings-configured repo
         pr_result = await create_dev_to_qa_pr(
             version=payload.version,
             title=payload.title,
             description=payload.description,
-            github_repo=repo.github_repo,
-            dev_branch=repo.dev_branch,
-            qa_branch=repo.qa_branch,
         )
         if pr_result:
-            release.pr_numbers[str(repo.id)] = pr_result["pr_number"]
-            
+            release.pr_numbers["default"] = pr_result["pr_number"]
+
     await release.save()
 
     from app.services.notification_service import notify_release_status_change
@@ -248,17 +258,23 @@ async def deploy_release(
     if release.pr_numbers:
         from app.services.github_api import merge_pr
         repositories = await _resolve_release_repos(release)
-        
         all_merged = True
-        
-        for repo in repositories:
-            pr_num = release.pr_numbers.get(str(repo.id))
+
+        if repositories:
+            for repo in repositories:
+                pr_num = release.pr_numbers.get(str(repo.id))
+                if pr_num:
+                    merged = await merge_pr(pr_num, github_repo=repo.github_repo)
+                    if not merged:
+                        all_merged = False
+        else:
+            pr_num = release.pr_numbers.get("default")
             if pr_num:
-                merged = await merge_pr(pr_num, github_repo=repo.github_repo)
+                merged = await merge_pr(pr_num)
                 if not merged:
                     all_merged = False
-                    
-        if not all_merged and repositories:
+
+        if not all_merged:
             raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Could not merge all PRs — check GitHub logs")
     else:
         now = datetime.now(UTC)
@@ -292,16 +308,23 @@ async def approve_release(
     if release.main_pr_numbers:
         from app.services.github_api import merge_pr
         repositories = await _resolve_release_repos(release)
-        
         all_merged = True
-        for repo in repositories:
-            pr_num = release.main_pr_numbers.get(str(repo.id))
+
+        if repositories:
+            for repo in repositories:
+                pr_num = release.main_pr_numbers.get(str(repo.id))
+                if pr_num:
+                    merged = await merge_pr(pr_num, github_repo=repo.github_repo)
+                    if not merged:
+                        all_merged = False
+        else:
+            pr_num = release.main_pr_numbers.get("default")
             if pr_num:
-                merged = await merge_pr(pr_num, github_repo=repo.github_repo)
+                merged = await merge_pr(pr_num)
                 if not merged:
                     all_merged = False
-                    
-        if not all_merged and repositories:
+
+        if not all_merged:
             raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Could not merge all PRs — check GitHub logs")
     else:
         now = datetime.now(UTC)
