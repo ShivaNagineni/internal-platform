@@ -38,7 +38,7 @@ app.add_middleware(
 
 from app.routers import leave, ideas, releases, stats, users, notifications, webhooks, auth  # noqa: E402
 
-app.include_router(auth.router)
+app.include_router(auth.router, prefix="/api")
 app.include_router(leave.router, prefix="/api")
 app.include_router(ideas.router, prefix="/api")
 app.include_router(releases.router, prefix="/api")

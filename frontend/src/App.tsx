@@ -22,7 +22,7 @@ function ZohoCallback() {
       return;
     }
 
-    fetch("/auth/zoho/exchange", {
+    fetch("/api/auth/zoho/exchange", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
@@ -65,7 +65,7 @@ function LoginScreen() {
   async function handleZohoLogin() {
     setZohoLoading(true);
     try {
-      const res = await fetch("/auth/zoho");
+      const res = await fetch("/api/auth/zoho");
       const { url } = await res.json();
       window.location.href = url;
     } catch {
