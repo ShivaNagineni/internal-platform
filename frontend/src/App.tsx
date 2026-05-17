@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useIsAuthenticated, useMsal } from "@azure/msal-react";
 import { Routes, Route, Navigate, useSearchParams } from "react-router-dom";
 import { loginRequest } from "@/lib/msalConfig";
@@ -14,8 +14,12 @@ import ReleasesPage from "@/pages/Releases";
 function ZohoCallback() {
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const exchanged = useRef(false);
 
   useEffect(() => {
+    if (exchanged.current) return;
+    exchanged.current = true;
+
     const code = searchParams.get("code");
     if (!code) {
       setError("No authorization code received from Zoho.");

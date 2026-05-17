@@ -89,7 +89,8 @@ async def get_current_user(
     # ── Zoho JWT (issued by this backend after Zoho OAuth) ────────────────────
     try:
         payload = _validate_zoho_jwt(token)
-        user = await User.find_one(User.zoho_uid == payload["sub"])
+        import uuid as _uuid
+        user = await User.get(_uuid.UUID(payload["sub"]))
         if user is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
         if not user.is_active:
