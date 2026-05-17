@@ -105,7 +105,7 @@ export default function ReleaseCard({
     <div
       onClick={() => onClick(release)}
       className={cn(
-        "relative bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden",
+        "relative bg-white dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-800/80 shadow-sm overflow-hidden",
         "transition-all duration-200 cursor-pointer",
         "hover:shadow-md hover:-translate-y-0.5",
         isCancelled && "opacity-60"
@@ -120,7 +120,7 @@ export default function ReleaseCard({
         {/* Top row: version + status + actions */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-xs font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md tracking-tight">
+            <span className="font-mono text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-md tracking-tight">
               v{release.version}
             </span>
             <StatusBadge status={release.status} size="sm" />
@@ -128,7 +128,7 @@ export default function ReleaseCard({
           {canManage && (
             <button
               onClick={handleEdit}
-              className="flex-shrink-0 p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-150"
+              className="flex-shrink-0 p-1.5 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/80 rounded-lg transition-colors duration-150"
               title="Edit release"
             >
               <Edit className="w-3.5 h-3.5" />
@@ -137,19 +137,19 @@ export default function ReleaseCard({
         </div>
 
         {/* Title */}
-        <h3 className="text-sm font-semibold text-slate-900 leading-snug line-clamp-1">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-white leading-snug line-clamp-1">
           {release.title}
         </h3>
 
         {/* Description */}
         {release.description && (
-          <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
             {release.description}
           </p>
         )}
 
         {/* Owner + date row */}
-        <div className="flex items-center gap-3 text-xs text-slate-500">
+        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
           {release.owner && (
             <div className="flex items-center gap-1.5">
               <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center flex-shrink-0">
@@ -160,10 +160,10 @@ export default function ReleaseCard({
               <span className="truncate max-w-[100px]">{release.owner.display_name}</span>
             </div>
           )}
-          {release.owner && release.release_date && <span className="text-slate-300">·</span>}
+          {release.owner && release.release_date && <span className="text-slate-300 dark:text-slate-600">·</span>}
           {release.release_date && (
             <div className="flex items-center gap-1">
-              <User className="w-3 h-3 text-slate-400" />
+              <User className="w-3 h-3 text-slate-400 dark:text-slate-500" />
               <span>{formatDate(release.release_date)}</span>
             </div>
           )}
@@ -189,7 +189,7 @@ export default function ReleaseCard({
                             ? STEP_COLORS[step.status] + " scale-90"
                             : isCurrent
                             ? STEP_COLORS[step.status] + " ring-2 ring-offset-1 ring-current scale-110"
-                            : "bg-white border-slate-200"
+                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
                         )}
                         style={
                           isCurrent
@@ -203,7 +203,7 @@ export default function ReleaseCard({
                       <div
                         className={cn(
                           "flex-1 h-px mx-0.5 transition-colors duration-200",
-                          idx < currentIndex ? "bg-slate-300" : "bg-slate-200"
+                          idx < currentIndex ? "bg-slate-300 dark:bg-slate-600" : "bg-slate-200 dark:bg-slate-700"
                         )}
                       />
                     )}
@@ -220,8 +220,8 @@ export default function ReleaseCard({
                       className={cn(
                         "text-[9px] leading-tight flex-shrink-0",
                         idx === currentIndex
-                          ? "text-slate-700 font-semibold"
-                          : "text-slate-400"
+                          ? "text-slate-700 dark:text-slate-200 font-semibold"
+                          : "text-slate-400 dark:text-slate-500"
                       )}
                     >
                       {step.label}
@@ -236,17 +236,17 @@ export default function ReleaseCard({
 
         {/* Action buttons row */}
         {canManage && !isCancelled && (
-          <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+          <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
             {nextStatus && nextLabel && (
               <button
                 onClick={handleAdvance}
                 className={cn(
                   "flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors duration-150",
                   release.status === "PLANNED"
-                    ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                    ? "bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900"
                     : release.status === "IN_PROGRESS"
-                    ? "bg-purple-50 text-purple-700 hover:bg-purple-100"
-                    : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                    ? "bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900"
+                    : "bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900"
                 )}
               >
                 <ChevronRight className="w-3 h-3" />
@@ -256,7 +256,7 @@ export default function ReleaseCard({
             {release.status !== "RELEASED" && (
               <button
                 onClick={handleCancel}
-                className="ml-auto text-xs text-slate-400 hover:text-rose-500 hover:bg-rose-50 px-2 py-1.5 rounded-lg transition-colors duration-150"
+                className="ml-auto text-xs text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/80 px-2 py-1.5 rounded-lg transition-colors duration-150"
               >
                 Cancel
               </button>

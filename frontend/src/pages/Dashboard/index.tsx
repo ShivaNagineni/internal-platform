@@ -49,22 +49,22 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon: Icon, colorClasses, loading }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow duration-200">
       <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0", colorClasses.bg)}>
         <Icon className={cn("w-6 h-6", colorClasses.icon)} />
       </div>
       <div className="min-w-0">
         {loading ? (
           <div className="animate-pulse space-y-1.5">
-            <div className="h-7 w-12 bg-slate-200 rounded-md" />
-            <div className="h-3 w-24 bg-slate-100 rounded-full" />
+            <div className="h-7 w-12 bg-slate-200 dark:bg-slate-800 rounded-md" />
+            <div className="h-3 w-24 bg-slate-100 dark:bg-slate-800/50 rounded-full" />
           </div>
         ) : (
           <>
             <p className={cn("text-2xl font-bold leading-none tabular-nums", colorClasses.value)}>
               {value ?? 0}
             </p>
-            <p className="text-xs text-slate-500 mt-1 leading-tight">{label}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-tight">{label}</p>
           </>
         )}
       </div>
@@ -85,7 +85,7 @@ function Card({
   return (
     <div
       className={cn(
-        "bg-white rounded-xl border border-slate-100 shadow-sm",
+        "bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm",
         className
       )}
     >
@@ -101,8 +101,8 @@ interface CardHeaderProps {
 
 function CardHeader({ title, action }: CardHeaderProps) {
   return (
-    <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
-      <h2 className="text-sm font-semibold text-slate-800">{title}</h2>
+    <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50 dark:border-slate-800/60">
+      <h2 className="text-sm font-semibold text-slate-800 dark:text-white">{title}</h2>
       {action}
     </div>
   );
@@ -115,10 +115,10 @@ function SkeletonListRow() {
   return (
     <div className="flex items-center gap-3 py-3 animate-pulse">
       <div className="flex-1 space-y-1.5">
-        <div className="h-3.5 bg-slate-200 rounded-full w-48" />
-        <div className="h-2.5 bg-slate-100 rounded-full w-32" />
+        <div className="h-3.5 bg-slate-200 dark:bg-slate-800 rounded-full w-48" />
+        <div className="h-2.5 bg-slate-100 dark:bg-slate-800/50 rounded-full w-32" />
       </div>
-      <div className="h-5 w-16 bg-slate-200 rounded-full" />
+      <div className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
     </div>
   );
 }
@@ -128,15 +128,15 @@ function SkeletonListRow() {
 // ---------------------------------------------------------------------------
 function RecentIdeaRow({ idea }: { idea: Idea }) {
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-slate-50 last:border-0 group">
+    <div className="flex items-center gap-3 py-3 border-b border-slate-50 dark:border-slate-800/60 last:border-0 group">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-slate-800 truncate leading-tight group-hover:text-indigo-600 transition-colors">
+        <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
           {idea.title}
         </p>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-xs text-slate-400 truncate">{idea.author.display_name}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 truncate">{idea.author.display_name}</span>
           {idea.upvote_count > 0 && (
-            <span className="flex items-center gap-0.5 text-[10px] text-slate-400">
+            <span className="flex items-center gap-0.5 text-[10px] text-slate-400 dark:text-slate-500">
               <ThumbsUp className="w-3 h-3" />
               {idea.upvote_count}
             </span>
@@ -153,15 +153,15 @@ function RecentIdeaRow({ idea }: { idea: Idea }) {
 // ---------------------------------------------------------------------------
 function UpcomingReleaseRow({ release }: { release: Release }) {
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-slate-50 last:border-0 group">
+    <div className="flex items-center gap-3 py-3 border-b border-slate-50 dark:border-slate-800/60 last:border-0 group">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-slate-800 truncate leading-tight group-hover:text-indigo-600 transition-colors">
+        <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
           {release.title}
         </p>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] font-mono text-slate-400">{release.version}</span>
+          <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500">{release.version}</span>
           {release.release_date && (
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-slate-400 dark:text-slate-500">
               {format(new Date(`${release.release_date}T00:00:00`), "MMM d, yyyy")}
             </span>
           )}
@@ -194,14 +194,14 @@ function QuickActionButton({
     <button
       onClick={onClick}
       className={cn(
-        "w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border transition-all duration-150 group hover:shadow-sm text-left",
+        "w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border dark:border-slate-800 transition-all duration-150 group hover:shadow-sm text-left",
         colorClasses
       )}
     >
       <Icon className="w-5 h-5 flex-shrink-0 transition-transform duration-150 group-hover:scale-110" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium leading-tight">{label}</p>
-        <p className="text-xs opacity-70 mt-0.5 leading-tight">{description}</p>
+        <p className="text-sm font-medium leading-tight dark:text-slate-200">{label}</p>
+        <p className="text-xs opacity-70 mt-0.5 leading-tight dark:text-slate-400">{description}</p>
       </div>
       <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex-shrink-0" />
     </button>
@@ -240,10 +240,10 @@ export default function Dashboard() {
       {/* ── Welcome header ─────────────────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 leading-tight">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
             {greeting}, {firstName}! 👋
           </h1>
-          <p className="text-sm text-slate-500 mt-1">{today}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{today}</p>
         </div>
       </div>
 
@@ -254,9 +254,9 @@ export default function Dashboard() {
           value={stats?.pending_leaves}
           icon={ClipboardList}
           colorClasses={{
-            bg: "bg-amber-50",
-            icon: "text-amber-500",
-            value: "text-amber-700",
+            bg: "bg-amber-50 dark:bg-amber-950/80",
+            icon: "text-amber-500 dark:text-amber-400",
+            value: "text-amber-700 dark:text-amber-300",
           }}
           loading={statsLoading}
         />
@@ -265,9 +265,9 @@ export default function Dashboard() {
           value={stats?.approved_leaves_today}
           icon={UserX}
           colorClasses={{
-            bg: "bg-rose-50",
-            icon: "text-rose-500",
-            value: "text-rose-700",
+            bg: "bg-rose-50 dark:bg-rose-950/80",
+            icon: "text-rose-500 dark:text-rose-400",
+            value: "text-rose-700 dark:text-rose-300",
           }}
           loading={statsLoading}
         />
@@ -276,9 +276,9 @@ export default function Dashboard() {
           value={stats?.ideas_under_review}
           icon={Lightbulb}
           colorClasses={{
-            bg: "bg-blue-50",
-            icon: "text-blue-500",
-            value: "text-blue-700",
+            bg: "bg-blue-50 dark:bg-blue-950/80",
+            icon: "text-blue-500 dark:text-blue-400",
+            value: "text-blue-700 dark:text-blue-300",
           }}
           loading={statsLoading}
         />
@@ -287,9 +287,9 @@ export default function Dashboard() {
           value={stats?.upcoming_releases}
           icon={Rocket}
           colorClasses={{
-            bg: "bg-indigo-50",
-            icon: "text-indigo-500",
-            value: "text-indigo-700",
+            bg: "bg-indigo-50 dark:bg-indigo-950/80",
+            icon: "text-indigo-500 dark:text-indigo-400",
+            value: "text-indigo-700 dark:text-indigo-300",
           }}
           loading={statsLoading}
         />
@@ -304,7 +304,7 @@ export default function Dashboard() {
             action={
               <button
                 onClick={() => navigate("/leave")}
-                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 transition-colors"
+                className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium flex items-center gap-1 transition-colors"
               >
                 View all <ArrowRight className="w-3 h-3" />
               </button>
@@ -323,21 +323,21 @@ export default function Dashboard() {
               icon={CalendarDays}
               label="Request Leave"
               description="Submit a new leave request"
-              colorClasses="bg-amber-50 border-amber-100 text-amber-800 hover:bg-amber-100 hover:border-amber-200"
+              colorClasses="bg-amber-50 dark:bg-amber-950/50 border-amber-100 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/80"
               onClick={() => navigate("/leave")}
             />
             <QuickActionButton
               icon={Lightbulb}
               label="Submit an Idea"
               description="Share your innovation with the team"
-              colorClasses="bg-blue-50 border-blue-100 text-blue-800 hover:bg-blue-100 hover:border-blue-200"
+              colorClasses="bg-blue-50 dark:bg-blue-950/50 border-blue-100 dark:border-blue-800/60 text-blue-800 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/80"
               onClick={() => navigate("/ideas")}
             />
             <QuickActionButton
               icon={Rocket}
               label="View Releases"
               description="Track upcoming product releases"
-              colorClasses="bg-indigo-50 border-indigo-100 text-indigo-800 hover:bg-indigo-100 hover:border-indigo-200"
+              colorClasses="bg-indigo-50 dark:bg-indigo-950/50 border-indigo-100 dark:border-indigo-800/60 text-indigo-800 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-950/80"
               onClick={() => navigate("/releases")}
             />
           </div>
@@ -353,7 +353,7 @@ export default function Dashboard() {
             action={
               <button
                 onClick={() => navigate("/ideas")}
-                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 transition-colors"
+                className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium flex items-center gap-1 transition-colors"
               >
                 View all <ArrowRight className="w-3 h-3" />
               </button>
@@ -361,18 +361,18 @@ export default function Dashboard() {
           />
           <div className="px-5 py-2">
             {ideasLoading ? (
-              <div className="divide-y divide-slate-50">
+              <div className="divide-y divide-slate-50 dark:divide-slate-800/60">
                 <SkeletonListRow />
                 <SkeletonListRow />
                 <SkeletonListRow />
               </div>
             ) : recentIdeas.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <Lightbulb className="w-8 h-8 text-slate-200 mb-2" />
-                <p className="text-sm text-slate-500">No ideas yet.</p>
+                <Lightbulb className="w-8 h-8 text-slate-200 dark:text-slate-700 mb-2" />
+                <p className="text-sm text-slate-500 dark:text-slate-400">No ideas yet.</p>
                 <button
                   onClick={() => navigate("/ideas")}
-                  className="mt-2 text-xs text-indigo-600 hover:underline"
+                  className="mt-2 text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   Be the first to submit one
                 </button>
@@ -390,7 +390,7 @@ export default function Dashboard() {
             action={
               <button
                 onClick={() => navigate("/releases")}
-                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 transition-colors"
+                className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium flex items-center gap-1 transition-colors"
               >
                 View all <ArrowRight className="w-3 h-3" />
               </button>
@@ -398,18 +398,18 @@ export default function Dashboard() {
           />
           <div className="px-5 py-2">
             {releasesLoading ? (
-              <div className="divide-y divide-slate-50">
+              <div className="divide-y divide-slate-50 dark:divide-slate-800/60">
                 <SkeletonListRow />
                 <SkeletonListRow />
                 <SkeletonListRow />
               </div>
             ) : upcomingReleases.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <Rocket className="w-8 h-8 text-slate-200 mb-2" />
-                <p className="text-sm text-slate-500">No upcoming releases.</p>
+                <Rocket className="w-8 h-8 text-slate-200 dark:text-slate-700 mb-2" />
+                <p className="text-sm text-slate-500 dark:text-slate-400">No upcoming releases.</p>
                 <button
                   onClick={() => navigate("/releases")}
-                  className="mt-2 text-xs text-indigo-600 hover:underline"
+                  className="mt-2 text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
                   View release board
                 </button>

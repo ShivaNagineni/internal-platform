@@ -20,9 +20,12 @@ async def init_db() -> None:
     from app.models.idea import Idea, IdeaVote
     from app.models.release import Release
     from app.models.notification import Notification
+    from app.models.platform_settings import PlatformSettings
+    from app.models.department import Department
+    from app.models.repository import Repository
 
     client = get_motor_client()
     await init_beanie(
         database=client[settings.db_name],
-        document_models=[User, Leave, Idea, IdeaVote, Release, Notification],
+        document_models=[User, Leave, Idea, IdeaVote, Release, Notification, PlatformSettings, Department, Repository],
     )

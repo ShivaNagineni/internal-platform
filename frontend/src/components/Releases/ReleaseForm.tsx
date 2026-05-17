@@ -4,6 +4,7 @@ import { X, AlertCircle, Loader2 } from "lucide-react";
 import type { Release } from "@/types";
 import { cn } from "@/lib/utils";
 import { useCreateRelease, useUpdateRelease } from "@/hooks/useReleases";
+import { useRepositories } from "@/hooks/useRepositories";
 
 // ─── Semver validation ────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ interface FormState {
   release_date: string;
   description: string;
   changelog: string;
+  repository_ids: string[];
 }
 
 interface FormErrors {
@@ -47,6 +49,7 @@ function getInitialState(release?: Release): FormState {
     release_date: release?.release_date ? release.release_date.substring(0, 10) : "",
     description: release?.description ?? "",
     changelog: release?.changelog ?? "",
+    repository_ids: release?.repository_ids ?? [],
   };
 }
 
@@ -67,16 +70,16 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-slate-700">
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
         {label}
         {required && <span className="text-rose-500 ml-0.5">*</span>}
         {hint && (
-          <span className="ml-1.5 text-xs font-normal text-slate-400">{hint}</span>
+          <span className="ml-1.5 text-xs font-normal text-slate-400 dark:text-slate-500">{hint}</span>
         )}
       </label>
       {children}
       {error && (
-        <p className="text-xs text-rose-600 flex items-center gap-1">
+        <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1">
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           {error}
         </p>
@@ -86,9 +89,9 @@ function Field({
 }
 
 const INPUT_BASE =
-  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow duration-150 shadow-sm";
+  "w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow duration-150 shadow-sm";
 
-const INPUT_ERROR = "border-rose-300 focus:ring-rose-400";
+const INPUT_ERROR = "border-rose-300 dark:border-rose-500/80 focus:ring-rose-400";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -96,6 +99,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
   const isEditMode = Boolean(release);
   const createRelease = useCreateRelease();
   const updateRelease = useUpdateRelease();
+  const { data: repositories = [] } = useRepositories();
 
   const [form, setForm] = useState<FormState>(() => getInitialState(release));
   const [errors, setErrors] = useState<FormErrors>({});
@@ -152,6 +156,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
             description: form.description.trim() || undefined,
             release_date: form.release_date,
             changelog: form.changelog.trim() || undefined,
+            repository_ids: form.repository_ids,
           },
         });
       } else {
@@ -160,6 +165,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
           version: form.version.trim(),
           release_date: form.release_date,
           description: form.description.trim() || undefined,
+          repository_ids: form.repository_ids,
         });
       }
       onOpenChange(false);
@@ -174,22 +180,22 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-slate-100 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
 
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
             <div>
-              <Dialog.Title className="text-base font-bold text-slate-900">
+              <Dialog.Title className="text-base font-bold text-slate-900 dark:text-white">
                 {isEditMode ? "Edit Release" : "Plan New Release"}
               </Dialog.Title>
-              <Dialog.Description className="text-xs text-slate-500 mt-0.5">
+              <Dialog.Description className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {isEditMode
                   ? "Update the details for this release."
                   : "Create a new release entry to track through the pipeline."}
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>
-              <button className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150">
+              <button className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150">
                 <X className="w-4 h-4" />
               </button>
             </Dialog.Close>
@@ -201,9 +207,9 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
 
               {/* Global error */}
               {errors.global && (
-                <div className="flex items-start gap-2.5 bg-rose-50 border border-rose-100 rounded-xl px-4 py-3">
+                <div className="flex items-start gap-2.5 bg-rose-50 dark:bg-rose-950/50 border border-rose-100 dark:border-rose-900/60 rounded-xl px-4 py-3">
                   <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-rose-700">{errors.global}</p>
+                  <p className="text-sm text-rose-700 dark:text-rose-300">{errors.global}</p>
                 </div>
               )}
 
@@ -238,11 +244,11 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
                     INPUT_BASE,
                     "font-mono tracking-wide",
                     touched.version && errors.version && INPUT_ERROR,
-                    isEditMode && "bg-slate-50 text-slate-500 cursor-not-allowed"
+                    isEditMode && "bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 cursor-not-allowed"
                   )}
                 />
                 {isEditMode && (
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                     Version cannot be changed after creation.
                   </p>
                 )}
@@ -279,6 +285,37 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
                 />
               </Field>
 
+              {/* Repositories */}
+              <Field label="Repositories" hint="Select repositories for this release">
+                <div className="grid gap-2 border border-slate-200 dark:border-slate-700 rounded-xl p-3 bg-slate-50/50 dark:bg-slate-800/50 max-h-48 overflow-y-auto">
+                  {repositories.length === 0 ? (
+                    <p className="text-sm text-slate-500 dark:text-slate-400 italic px-2">No repositories configured.</p>
+                  ) : (
+                    repositories.map((repo) => (
+                      <label key={repo.id} className="flex items-center gap-3 p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-colors cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 transition-all"
+                          checked={form.repository_ids.includes(repo.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setField("repository_ids", [...form.repository_ids, repo.id]);
+                            } else {
+                              setField("repository_ids", form.repository_ids.filter((id) => id !== repo.id));
+                            }
+                          }}
+                          disabled={isBusy}
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{repo.name}</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">{repo.github_repo}</span>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </Field>
+
               {/* Changelog — edit mode only */}
               {isEditMode && (
                 <Field label="Changelog" hint="markdown supported">
@@ -295,11 +332,11 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex items-center justify-end gap-3">
+            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-800 rounded-b-2xl flex items-center justify-end gap-3">
               <Dialog.Close asChild>
                 <button
                   type="button"
-                  className="text-sm font-medium text-slate-600 hover:text-slate-800 px-4 py-2 rounded-xl hover:bg-slate-200 transition-colors duration-150"
+                  className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 px-4 py-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-150"
                   disabled={isBusy}
                 >
                   Cancel
@@ -311,7 +348,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
                 className={cn(
                   "flex items-center gap-2 text-sm font-semibold px-5 py-2 rounded-xl transition-colors duration-150 shadow-sm",
                   isBusy
-                    ? "bg-indigo-400 text-white cursor-not-allowed"
+                    ? "bg-indigo-400 dark:bg-indigo-600 text-white cursor-not-allowed opacity-70"
                     : "bg-indigo-600 hover:bg-indigo-700 text-white"
                 )}
               >

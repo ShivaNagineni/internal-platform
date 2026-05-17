@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -12,7 +12,7 @@ import {
 import {
   SortableContext,
   useSortable,
-  verticalListSortingStrategy,
+  horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
@@ -36,36 +36,36 @@ const COLUMNS: ColumnConfig[] = [
     status: "SUBMITTED",
     label: "Submitted",
     accentBar: "bg-sky-400",
-    headerText: "text-sky-700",
-    countPill: "bg-sky-100 text-sky-700",
+    headerText: "text-sky-700 dark:text-sky-400",
+    countPill: "bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300",
   },
   {
     status: "UNDER_REVIEW",
     label: "Under Review",
     accentBar: "bg-indigo-500",
-    headerText: "text-indigo-700",
-    countPill: "bg-indigo-100 text-indigo-700",
+    headerText: "text-indigo-700 dark:text-indigo-400",
+    countPill: "bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300",
   },
   {
     status: "APPROVED",
     label: "Approved",
     accentBar: "bg-emerald-500",
-    headerText: "text-emerald-700",
-    countPill: "bg-emerald-100 text-emerald-700",
+    headerText: "text-emerald-700 dark:text-emerald-400",
+    countPill: "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300",
   },
   {
     status: "REJECTED",
     label: "Rejected",
     accentBar: "bg-rose-400",
-    headerText: "text-rose-700",
-    countPill: "bg-rose-100 text-rose-700",
+    headerText: "text-rose-700 dark:text-rose-400",
+    countPill: "bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300",
   },
   {
     status: "IMPLEMENTED",
     label: "Implemented",
     accentBar: "bg-purple-500",
-    headerText: "text-purple-700",
-    countPill: "bg-purple-100 text-purple-700",
+    headerText: "text-purple-700 dark:text-purple-400",
+    countPill: "bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300",
   },
 ];
 
@@ -79,6 +79,7 @@ interface Props {
   isVotePending?: boolean;
   onStatusChange: (id: string, status: IdeaStatus) => void;
   onCardClick: (idea: Idea) => void;
+  statusFilter?: IdeaStatus | "ALL";
 }
 
 // ─── Sortable card wrapper ────────────────────────────────────────────────────
@@ -128,7 +129,7 @@ function SortableIdeaCard({
       {...(canDrag ? attributes : {})}
       {...(canDrag ? listeners : {})}
       className={cn(
-        "touch-none",
+        "touch-none w-80 flex-shrink-0",
         isDragging ? "opacity-40" : "opacity-100",
         canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
       )}
@@ -146,7 +147,7 @@ function SortableIdeaCard({
   );
 }
 
-// ─── Droppable column ─────────────────────────────────────────────────────────
+// ─── Droppable horizontal swimlane ────────────────────────────────────────────
 
 interface ColumnProps {
   config: ColumnConfig;
@@ -160,7 +161,7 @@ interface ColumnProps {
   onCardClick: (idea: Idea) => void;
 }
 
-function KanbanColumn({
+function KanbanRow({
   config,
   ideas,
   currentUserId,
@@ -174,39 +175,39 @@ function KanbanColumn({
   const { setNodeRef, isOver } = useDroppable({ id: config.status });
 
   return (
-    <div className="flex flex-col w-72 flex-shrink-0">
-      {/* Column header */}
-      <div className="bg-white rounded-t-xl border border-slate-200 overflow-hidden">
-        {/* Colored accent bar at top — uses a static bg class stored in config */}
-        <div className={cn("h-1 w-full", config.accentBar)} />
-        <div className="px-3.5 py-3 flex items-center justify-between">
-          <h3 className={cn("text-sm font-semibold", config.headerText)}>
-            {config.label}
-          </h3>
-          <span
-            className={cn(
-              "inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-bold",
-              config.countPill
-            )}
-          >
-            {ideas.length}
-          </span>
-        </div>
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 flex flex-col gap-4">
+      {/* Row header */}
+      <div
+        className={cn(
+          "flex items-center justify-between px-4 py-3 rounded-xl border border-slate-200/60 dark:border-slate-800/80 relative overflow-hidden",
+          isOver && canDrag ? "ring-2 ring-indigo-400 bg-slate-50 dark:bg-slate-800" : "bg-slate-50/50 dark:bg-slate-800/50"
+        )}
+      >
+        <div className={cn("absolute left-0 top-0 bottom-0 w-1.5", config.accentBar)} />
+        <span className={cn("text-sm font-semibold pl-2", config.headerText)}>
+          {config.label}
+        </span>
+        <span
+          className={cn(
+            "text-xs font-bold px-2.5 py-0.5 rounded-full",
+            config.countPill
+          )}
+        >
+          {ideas.length}
+        </span>
       </div>
 
-      {/* Drop zone / card list */}
+      {/* Cards in horizontal swimlane */}
       <div
         ref={setNodeRef}
         className={cn(
-          "flex-1 rounded-b-xl bg-slate-50 border border-t-0 border-slate-200 p-2.5 space-y-2.5 overflow-y-auto",
-          "min-h-[200px] max-h-[calc(100vh-260px)]",
-          "transition-colors duration-150",
-          isOver && canDrag ? "bg-slate-100 border-slate-300" : ""
+          "flex items-stretch gap-4 overflow-x-auto pb-2 min-h-[160px] scrollbar-hide rounded-xl p-2 transition-colors duration-150",
+          isOver && canDrag ? "bg-indigo-50/30 dark:bg-indigo-950/20 border-2 border-dashed border-indigo-200 dark:border-indigo-800" : "bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/80"
         )}
       >
         <SortableContext
           items={ideas.map((i) => i.id)}
-          strategy={verticalListSortingStrategy}
+          strategy={horizontalListSortingStrategy}
         >
           {ideas.map((idea) => (
             <SortableIdeaCard
@@ -226,12 +227,12 @@ function KanbanColumn({
         {ideas.length === 0 && (
           <div
             className={cn(
-              "flex items-center justify-center h-24 rounded-lg border-2 border-dashed border-slate-200",
+              "w-full flex items-center justify-center py-10 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800",
               "text-xs text-slate-400 font-medium",
-              isOver && canDrag ? "border-slate-400 bg-white" : ""
+              isOver && canDrag ? "border-indigo-400 dark:border-indigo-500 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400" : ""
             )}
           >
-            {isOver && canDrag ? "Drop here" : "No ideas"}
+            {isOver && canDrag ? "Drop here" : "No ideas in this status"}
           </div>
         )}
       </div>
@@ -249,6 +250,7 @@ export default function KanbanBoard({
   isVotePending,
   onStatusChange,
   onCardClick,
+  statusFilter,
 }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -302,6 +304,11 @@ export default function KanbanBoard({
   const byStatus = (status: IdeaStatus) =>
     ideas.filter((i) => i.status === status);
 
+  const displayedColumns = useMemo(() => {
+    if (!statusFilter || statusFilter === "ALL") return COLUMNS;
+    return COLUMNS.filter((c) => c.status === statusFilter);
+  }, [statusFilter]);
+
   return (
     <DndContext
       sensors={canDrag ? sensors : []}
@@ -309,10 +316,10 @@ export default function KanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      {/* Horizontally scrollable board */}
-      <div className="flex gap-4 overflow-x-auto pb-4 min-h-[400px]">
-        {COLUMNS.map((col) => (
-          <KanbanColumn
+      {/* Vertically stacked horizontal swimlanes */}
+      <div className="space-y-6 pb-4">
+        {displayedColumns.map((col) => (
+          <KanbanRow
             key={col.status}
             config={col}
             ideas={byStatus(col.status)}
@@ -330,7 +337,7 @@ export default function KanbanBoard({
       {/* Drag overlay — semi-transparent copy of active card */}
       <DragOverlay dropAnimation={null}>
         {activeIdea ? (
-          <div className="rotate-2 opacity-90 pointer-events-none w-72">
+          <div className="rotate-2 opacity-90 pointer-events-none w-80">
             <IdeaCard
               idea={activeIdea}
               currentUserId={currentUserId}

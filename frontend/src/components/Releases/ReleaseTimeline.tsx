@@ -10,48 +10,48 @@ const STATUS_CONFIG: Record<
   { bg: string; border: string; glow: string; dot: string; icon: any; iconColor: string; spineGlow: string }
 > = {
   PLANNED: {
-    bg: "bg-white hover:bg-slate-50/80",
-    border: "border-slate-200 hover:border-slate-300",
+    bg: "bg-white dark:bg-slate-800 hover:bg-slate-50/80 dark:hover:bg-slate-750",
+    border: "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600",
     glow: "shadow-sm hover:shadow-md",
-    dot: "bg-slate-400 border-white",
+    dot: "bg-slate-400 border-white dark:border-slate-900",
     icon: Calendar,
-    iconColor: "text-slate-500",
+    iconColor: "text-slate-500 dark:text-slate-400",
     spineGlow: "",
   },
   IN_PROGRESS: {
-    bg: "bg-gradient-to-br from-indigo-50/60 via-white to-white hover:from-indigo-50",
-    border: "border-indigo-200 hover:border-indigo-400 ring-1 ring-indigo-400/20",
+    bg: "bg-gradient-to-br from-indigo-50/60 dark:from-indigo-950/40 via-white dark:via-slate-800 to-white dark:to-slate-800 hover:from-indigo-50 dark:hover:from-indigo-950/60",
+    border: "border-indigo-200 dark:border-indigo-800 hover:border-indigo-400 ring-1 ring-indigo-400/20",
     glow: "shadow-md hover:shadow-indigo-100 shadow-indigo-500/10",
-    dot: "bg-indigo-600 border-white",
+    dot: "bg-indigo-600 border-white dark:border-slate-900",
     icon: Sparkles,
-    iconColor: "text-indigo-600 animate-pulse",
+    iconColor: "text-indigo-600 dark:text-indigo-400 animate-pulse",
     spineGlow: "ring-8 ring-indigo-500/20",
   },
   STAGING: {
-    bg: "bg-gradient-to-br from-purple-50/60 via-white to-white hover:from-purple-50",
-    border: "border-purple-200 hover:border-purple-400 ring-1 ring-purple-400/20",
+    bg: "bg-gradient-to-br from-purple-50/60 dark:from-purple-950/40 via-white dark:via-slate-800 to-white dark:to-slate-800 hover:from-purple-50 dark:hover:from-purple-950/60",
+    border: "border-purple-200 dark:border-purple-800 hover:border-purple-400 ring-1 ring-purple-400/20",
     glow: "shadow-md hover:shadow-purple-100 shadow-purple-500/10",
-    dot: "bg-purple-600 border-white",
+    dot: "bg-purple-600 border-white dark:border-slate-900",
     icon: Layers,
-    iconColor: "text-purple-600",
+    iconColor: "text-purple-600 dark:text-purple-400",
     spineGlow: "ring-8 ring-purple-500/20",
   },
   RELEASED: {
-    bg: "bg-white hover:bg-emerald-50/30",
-    border: "border-slate-200 hover:border-emerald-300",
+    bg: "bg-white dark:bg-slate-800 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/30",
+    border: "border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-800",
     glow: "shadow-sm hover:shadow-md hover:shadow-emerald-500/5",
-    dot: "bg-emerald-500 border-white",
+    dot: "bg-emerald-500 border-white dark:border-slate-900",
     icon: CheckCircle2,
-    iconColor: "text-emerald-600",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
     spineGlow: "",
   },
   CANCELLED: {
-    bg: "bg-rose-50/30 hover:bg-rose-50/50",
-    border: "border-rose-100 hover:border-rose-200",
+    bg: "bg-rose-50/30 dark:bg-rose-950/30 hover:bg-rose-50/50 dark:hover:bg-rose-950/50",
+    border: "border-rose-100 dark:border-rose-900/60 hover:border-rose-200 dark:hover:border-rose-800",
     glow: "shadow-sm hover:shadow-md",
-    dot: "bg-rose-400 border-white",
+    dot: "bg-rose-400 border-white dark:border-slate-900",
     icon: XCircle,
-    iconColor: "text-rose-500",
+    iconColor: "text-rose-500 dark:text-rose-400",
     spineGlow: "",
   },
 };
@@ -122,8 +122,8 @@ function TimelineNode({ release, isLeft, isLast, onClick }: TimelineNodeProps) {
               current
                 ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
                 : past
-                ? "bg-slate-100 text-slate-600 border border-slate-200"
-                : "bg-slate-100 text-slate-700 border border-slate-200"
+                ? "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600"
+                : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600"
             )}
           >
             <StatusIcon className={cn("w-3.5 h-3.5", current ? "text-white" : cfg.iconColor)} />
@@ -137,7 +137,7 @@ function TimelineNode({ release, isLeft, isLast, onClick }: TimelineNodeProps) {
       <h3
         className={cn(
           "text-base font-bold leading-snug line-clamp-2 mb-2 transition-colors relative z-10",
-          current ? "text-indigo-950 group-hover:text-indigo-600" : past ? "text-slate-800" : "text-slate-900 group-hover:text-indigo-600"
+          current ? "text-indigo-950 dark:text-indigo-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" : past ? "text-slate-800 dark:text-slate-200" : "text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
         )}
       >
         {release.title}
@@ -145,26 +145,26 @@ function TimelineNode({ release, isLeft, isLast, onClick }: TimelineNodeProps) {
 
       {/* Description */}
       {release.description && (
-        <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-4 relative z-10">
+        <p className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed line-clamp-2 mb-4 relative z-10">
           {release.description}
         </p>
       )}
 
       {/* Status History Micro-Timeline */}
       {release.status_history && release.status_history.length > 0 && (
-        <div className="mb-4 p-3.5 bg-slate-50/70 rounded-xl border border-slate-100/80 relative z-10">
+        <div className="mb-4 p-3.5 bg-slate-50/70 dark:bg-slate-900/60 rounded-xl border border-slate-100/80 dark:border-slate-800 relative z-10">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-1.5">
             <Clock className="w-3 h-3 text-slate-400" />
             <span>Status Transition History</span>
           </p>
           <div className="space-y-2 font-mono text-xs">
             {release.status_history.map((hist, i) => (
-              <div key={i} className="flex items-center justify-between gap-3 text-slate-600">
+              <div key={i} className="flex items-center justify-between gap-3 text-slate-600 dark:text-slate-400">
                 <div className="flex items-center gap-2">
                   <span className={cn("w-2 h-2 rounded-full flex-shrink-0 shadow-xs", STEP_COLORS[hist.status])} />
-                  <span className="font-semibold text-slate-700 text-[11px]">{hist.status.replace("_", " ")}</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">{hist.status.replace("_", " ")}</span>
                 </div>
-                <span className="text-slate-400 text-[10px]">{formatDateTime(hist.changed_at)}</span>
+                <span className="text-slate-400 dark:text-slate-500 text-[10px]">{formatDateTime(hist.changed_at)}</span>
               </div>
             ))}
           </div>
@@ -172,18 +172,18 @@ function TimelineNode({ release, isLeft, isLast, onClick }: TimelineNodeProps) {
       )}
 
       {/* Divider */}
-      <div className="border-t border-slate-100/80 my-3" />
+      <div className="border-t border-slate-100/80 dark:border-slate-800 my-3" />
 
       {/* Bottom row: owner + date */}
       <div className="flex items-center justify-between text-xs text-slate-400 relative z-10">
         {release.owner && (
-          <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-medium">
             <User className="w-3.5 h-3.5 text-slate-400" />
             <span className="truncate max-w-[140px]">{release.owner.display_name}</span>
           </div>
         )}
         {release.release_date && (
-          <div className="flex items-center gap-1.5 ml-auto font-medium text-slate-500">
+          <div className="flex items-center gap-1.5 ml-auto font-medium text-slate-500 dark:text-slate-400">
             <Clock className="w-3.5 h-3.5 text-slate-400" />
             <span>{formatDate(release.release_date)}</span>
           </div>
@@ -221,7 +221,7 @@ function TimelineNode({ release, isLeft, isLast, onClick }: TimelineNodeProps) {
           <div
             className={cn(
               "absolute top-6 w-1 h-[calc(100%+3rem)] rounded-full transition-all duration-300",
-              current ? "bg-gradient-to-b from-indigo-500 via-purple-300 to-slate-200" : "bg-slate-200"
+              current ? "bg-gradient-to-b from-indigo-500 via-purple-300 to-slate-200 dark:to-slate-700" : "bg-slate-200 dark:bg-slate-700"
             )}
           />
         )}
@@ -241,10 +241,10 @@ export default function ReleaseTimeline({ releases, onReleaseClick }: Props) {
   if (releases.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 shadow-inner">
+        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-4 shadow-inner">
           <Rocket className="w-8 h-8 text-slate-400" />
         </div>
-        <p className="text-base font-semibold text-slate-700">No releases scheduled</p>
+        <p className="text-base font-semibold text-slate-700 dark:text-slate-200">No releases scheduled</p>
         <p className="text-sm text-slate-400 mt-1">
           Plan your first release to see the timeline.
         </p>
@@ -260,7 +260,7 @@ export default function ReleaseTimeline({ releases, onReleaseClick }: Props) {
   return (
     <div className="relative py-8 px-4 max-w-5xl mx-auto">
       {/* Vertical spine line */}
-      <div className="absolute left-1/2 top-4 bottom-4 w-1 bg-slate-100 rounded-full -translate-x-1/2 pointer-events-none shadow-inner" />
+      <div className="absolute left-1/2 top-4 bottom-4 w-1 bg-slate-100 dark:bg-slate-800 rounded-full -translate-x-1/2 pointer-events-none shadow-inner" />
 
       <div className="relative">
         {sorted.map((release, idx) => (

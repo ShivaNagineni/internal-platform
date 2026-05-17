@@ -112,7 +112,7 @@ export default function ApprovalModal({
         <Dialog.Content
           className={cn(
             "fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2",
-            "bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden",
+            "bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
             "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
@@ -121,28 +121,28 @@ export default function ApprovalModal({
           )}
         >
           {/* Header */}
-          <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-slate-100">
+          <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-4">
               <div
                 className={cn(
-                  "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0",
-                  config.iconBg,
+                  "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border dark:border-slate-800",
+                  config.iconBg === "bg-emerald-100" ? "bg-emerald-100 dark:bg-emerald-950/80" : "bg-rose-100 dark:bg-rose-950/80",
                 )}
               >
-                <StatusIcon className={cn("w-5 h-5", config.iconColor)} />
+                <StatusIcon className={cn("w-5 h-5", config.iconColor === "text-emerald-600" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")} />
               </div>
               <div>
-                <Dialog.Title className="text-base font-semibold text-slate-900">
+                <Dialog.Title className="text-base font-semibold text-slate-900 dark:text-white">
                   {config.title}
                 </Dialog.Title>
-                <Dialog.Description className="text-sm text-slate-500 mt-0.5">
+                <Dialog.Description className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                   {config.description}
                 </Dialog.Description>
               </div>
             </div>
             <Dialog.Close asChild>
               <button
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
@@ -157,9 +157,9 @@ export default function ApprovalModal({
               <div>
                 <label
                   htmlFor={`${formId}-comment`}
-                  className="flex items-center gap-1.5 text-sm font-medium text-slate-700 mb-1.5"
+                  className="flex items-center gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
                 >
-                  <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
+                  <MessageSquare className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                   {config.commentLabel}
                   {config.commentRequired && (
                     <span className="text-rose-500 ml-0.5">*</span>
@@ -181,12 +181,12 @@ export default function ApprovalModal({
                     }
                   }}
                   className={cn(
-                    "w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150",
-                    commentError ? "border-rose-400 ring-1 ring-rose-300" : "border-slate-200",
+                    "w-full rounded-lg border bg-white dark:bg-slate-900 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150",
+                    commentError ? "border-rose-400 ring-1 ring-rose-300" : "border-slate-200 dark:border-slate-700",
                   )}
                 />
                 {commentError && (
-                  <p className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+                  <p className="mt-1 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3 flex-shrink-0" />
                     {commentError}
                   </p>
@@ -195,19 +195,19 @@ export default function ApprovalModal({
 
               {/* API Error */}
               {errorMessage && (
-                <div className="flex items-start gap-2 px-3 py-2.5 bg-rose-50 rounded-lg border border-rose-200">
-                  <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-rose-700">{errorMessage}</p>
+                <div className="flex items-start gap-2 px-3 py-2.5 bg-rose-50 dark:bg-rose-950/80 rounded-lg border border-rose-200 dark:border-rose-800">
+                  <AlertCircle className="w-4 h-4 text-rose-500 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-rose-700 dark:text-rose-300">{errorMessage}</p>
                 </div>
               )}
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50">
+            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 bg-slate-50 dark:bg-slate-900/80">
               <Dialog.Close asChild>
                 <button
                   type="button"
-                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-200 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-slate-400"
                 >
                   Cancel
                 </button>

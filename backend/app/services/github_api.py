@@ -8,15 +8,29 @@ logger = logging.getLogger(__name__)
 _BASE = "https://api.github.com"
 
 
-async def create_dev_to_qa_pr(version: str, title: str, description: str | None = None) -> dict[str, int | str] | None:
-    """Create a PR from Development → Qa on the first configured repo. Returns {pr_number, url} or None."""
+def _resolve_repo(github_repo: str | None) -> str | None:
+    if github_repo:
+        return github_repo
     settings = get_settings()
     repos = settings.get_github_repos()
-    if not settings.github_token or not repos:
-        logger.warning("GitHub token or repos not configured — skipping dev→qa PR creation")
+    return repos[0] if repos else None
+
+
+async def create_dev_to_qa_pr(
+    version: str,
+    title: str,
+    description: str | None = None,
+    github_repo: str | None = None,
+    dev_branch: str | None = None,
+    qa_branch: str | None = None,
+) -> dict[str, int | str] | None:
+    """Create a PR from dev → qa on the given repo. Returns {pr_number, url} or None."""
+    settings = get_settings()
+    repo = _resolve_repo(github_repo)
+    if not settings.github_token or not repo:
+        logger.warning("GitHub token or repo not configured — skipping dev→qa PR creation")
         return None
 
-    repo = repos[0]
     owner = repo.split("/")[0]
     headers = {
         "Authorization": f"Bearer {settings.github_token}",
@@ -27,25 +41,33 @@ async def create_dev_to_qa_pr(version: str, title: str, description: str | None 
     body = description or f"Release `v{version}`: {title}"
 
     async with httpx.AsyncClient(timeout=15) as client:
-        # Detect actual branch names (case-insensitive)
         branch_resp = await client.get(f"{_BASE}/repos/{repo}/branches", headers=headers)
         if branch_resp.status_code != 200:
             logger.error("Failed to list branches for %s: %s", repo, branch_resp.text)
             return None
 
         branches = [b["name"] for b in branch_resp.json()]
-        dev_branch = next((b for b in branches if b.lower() in ("development", "dev")), None)
-        qa_branch = next((b for b in branches if b.lower() == "qa"), None)
 
-        if not dev_branch or not qa_branch:
+        if dev_branch:
+            resolved_dev = next((b for b in branches if b == dev_branch), None) \
+                or next((b for b in branches if b.lower() == dev_branch.lower()), None)
+        else:
+            resolved_dev = next((b for b in branches if b.lower() in ("development", "dev")), None)
+
+        if qa_branch:
+            resolved_qa = next((b for b in branches if b == qa_branch), None) \
+                or next((b for b in branches if b.lower() == qa_branch.lower()), None)
+        else:
+            resolved_qa = next((b for b in branches if b.lower() == "qa"), None)
+
+        if not resolved_dev or not resolved_qa:
             logger.warning("dev or qa branch not found in %s (branches: %s)", repo, branches)
             return None
 
-        # Return existing open PR if one already exists
         check_resp = await client.get(
             f"{_BASE}/repos/{repo}/pulls",
             headers=headers,
-            params={"state": "open", "head": f"{owner}:{dev_branch}", "base": qa_branch},
+            params={"state": "open", "head": f"{owner}:{resolved_dev}", "base": resolved_qa},
         )
         if check_resp.status_code == 200 and check_resp.json():
             existing = check_resp.json()[0]
@@ -55,7 +77,7 @@ async def create_dev_to_qa_pr(version: str, title: str, description: str | None 
         resp = await client.post(
             f"{_BASE}/repos/{repo}/pulls",
             headers=headers,
-            json={"title": pr_title, "head": dev_branch, "base": qa_branch, "body": body},
+            json={"title": pr_title, "head": resolved_dev, "base": resolved_qa, "body": body},
         )
         if resp.status_code == 201:
             data = resp.json()
@@ -66,12 +88,27 @@ async def create_dev_to_qa_pr(version: str, title: str, description: str | None 
             return None
 
 
-async def create_qa_to_main_pr(version: str, title: str) -> list[str]:
-    """Create a PR from Qa → main on every configured repo. Returns list of PR URLs created."""
+async def create_qa_to_main_pr(
+    version: str,
+    title: str,
+    github_repo: str | None = None,
+    qa_branch: str | None = None,
+    main_branch: str | None = None,
+) -> list[str]:
+    """Create a PR from qa → main. If github_repo is provided, target only that repo.
+    Otherwise fall back to every repo in settings.github_repos. Returns list of PR URLs created."""
     settings = get_settings()
-    repos = settings.get_github_repos()
-    if not settings.github_token or not repos:
-        logger.warning("GitHub token or repos not configured — skipping PR creation")
+    if not settings.github_token:
+        logger.warning("GitHub token not configured — skipping PR creation")
+        return []
+
+    if github_repo:
+        repos = [github_repo]
+    else:
+        repos = settings.get_github_repos()
+
+    if not repos:
+        logger.warning("No GitHub repos configured — skipping PR creation")
         return []
 
     headers = {
@@ -86,7 +123,6 @@ async def create_qa_to_main_pr(version: str, title: str) -> list[str]:
         for repo in repos:
             owner = repo.split("/")[0]
 
-            # Detect the actual case of the Qa branch
             branch_resp = await client.get(
                 f"{_BASE}/repos/{repo}/branches",
                 headers=headers,
@@ -96,16 +132,28 @@ async def create_qa_to_main_pr(version: str, title: str) -> list[str]:
                 continue
 
             branches = [b["name"] for b in branch_resp.json()]
-            qa_branch = next((b for b in branches if b.lower() == "qa"), None)
-            if not qa_branch:
+
+            if qa_branch:
+                resolved_qa = next((b for b in branches if b == qa_branch), None) \
+                    or next((b for b in branches if b.lower() == qa_branch.lower()), None)
+            else:
+                resolved_qa = next((b for b in branches if b.lower() == "qa"), None)
+
+            if main_branch:
+                resolved_main = next((b for b in branches if b == main_branch), None) \
+                    or next((b for b in branches if b.lower() == main_branch.lower()), None) \
+                    or "main"
+            else:
+                resolved_main = next((b for b in branches if b.lower() in ("main", "master")), "main")
+
+            if not resolved_qa:
                 logger.warning("No 'qa' branch found in %s (branches: %s) — skipping", repo, branches)
                 continue
 
-            # Check if a PR from qa → main already exists
             check_resp = await client.get(
                 f"{_BASE}/repos/{repo}/pulls",
                 headers=headers,
-                params={"state": "open", "head": f"{owner}:{qa_branch}", "base": "main"},
+                params={"state": "open", "head": f"{owner}:{resolved_qa}", "base": resolved_main},
             )
             if check_resp.status_code == 200 and check_resp.json():
                 existing = check_resp.json()[0]
@@ -118,8 +166,8 @@ async def create_qa_to_main_pr(version: str, title: str) -> list[str]:
                 headers=headers,
                 json={
                     "title": pr_title,
-                    "head": qa_branch,
-                    "base": "main",
+                    "head": resolved_qa,
+                    "base": resolved_main,
                     "body": f"Automated release PR for `v{version}`.\n\nCreated by Internal Platform when release reached STAGING.",
                 },
             )
@@ -136,11 +184,12 @@ async def create_qa_to_main_pr(version: str, title: str) -> list[str]:
     return created
 
 
-async def merge_pr(repo: str, pr_number: int) -> bool:
+async def merge_pr(pr_number: int, github_repo: str | None = None) -> bool:
     """Merge a PR via the GitHub API. Returns True on success."""
     settings = get_settings()
-    if not settings.github_token:
-        logger.warning("GitHub token not configured — cannot merge PR")
+    repo = _resolve_repo(github_repo)
+    if not settings.github_token or not repo:
+        logger.warning("GitHub token or repo not configured — cannot merge PR")
         return False
 
     headers = {
@@ -160,3 +209,27 @@ async def merge_pr(repo: str, pr_number: int) -> bool:
         else:
             logger.error("Failed to merge PR #%s in %s: HTTP %s — %s", pr_number, repo, resp.status_code, resp.text)
             return False
+
+
+async def get_pr_status(pr_number: int, github_repo: str | None = None) -> dict | None:
+    """Fetch the current status of a PR. Returns the PR JSON or None on failure."""
+    settings = get_settings()
+    repo = _resolve_repo(github_repo)
+    if not settings.github_token or not repo:
+        logger.warning("GitHub token or repo not configured — cannot fetch PR status")
+        return None
+
+    headers = {
+        "Authorization": f"Bearer {settings.github_token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.get(
+            f"{_BASE}/repos/{repo}/pulls/{pr_number}",
+            headers=headers,
+        )
+        if resp.status_code == 200:
+            return resp.json()
+        logger.error("Failed to fetch PR #%s in %s: HTTP %s — %s", pr_number, repo, resp.status_code, resp.text)
+        return None
