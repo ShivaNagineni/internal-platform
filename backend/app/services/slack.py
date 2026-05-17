@@ -143,17 +143,19 @@ class SlackService:
             {"type": "divider"},
         ]
 
-    async def send_release_webhook(self, release, user) -> None:
-        url = settings.slack_webhook_url
-        if not url:
+    async def send_release_webhook(self, release, user=None) -> None:
+        channel = settings.slack_digest_channel
+        if not channel:
             return
         blocks = self.build_release_notification(release, user, release.status.value.title())
-        try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.post(url, json={"blocks": blocks})
-                print(f"[SLACK WEBHOOK] Posted release {release.id}, status={resp.status_code}")
-        except Exception as e:
-            print(f"[SLACK WEBHOOK ERROR] send_release_webhook failed: {e}")
+        text = f"Release {release.version} - {release.status.value}"
+        if release.slack_ts:
+            await self.update_message(channel, release.slack_ts, blocks, text=text)
+        else:
+            ts = await self.post_message(channel, blocks, text=text)
+            if ts:
+                release.slack_ts = ts
+                await release.save()
 
     def build_release_notification(self, release, user, action: str) -> list[dict]:
         status_emoji = {
@@ -173,9 +175,9 @@ class SlackService:
                 "fields": [
                     {"type": "mrkdwn", "text": f"*Title:*\n{release.title}"},
                     {"type": "mrkdwn", "text": f"*Version:*\n{release.version}"},
-                    {"type": "mrkdwn", "text": f"*Owner:*\n{user.display_name}"},
+                    {"type": "mrkdwn", "text": f"*Owner:*\n{user.display_name if user else 'GitHub'}"},
                     {"type": "mrkdwn", "text": f"*Status:*\n{release.status.value}"},
-                    {"type": "mrkdwn", "text": f"*Release Date:*\n{release.release_date}"},
+                    {"type": "mrkdwn", "text": f"*Release Date:*\n{release.release_date or 'TBD'}"},
                 ],
             },
             {"type": "divider"},

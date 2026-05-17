@@ -142,19 +142,23 @@ export default function ReleaseCard({
 
         {/* Owner + date row */}
         <div className="flex items-center gap-3 text-xs text-slate-500">
-          <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-[9px] font-semibold leading-none">
-                {getInitials(release.owner.display_name)}
-              </span>
+          {release.owner && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-[9px] font-semibold leading-none">
+                  {getInitials(release.owner.display_name)}
+                </span>
+              </div>
+              <span className="truncate max-w-[100px]">{release.owner.display_name}</span>
             </div>
-            <span className="truncate max-w-[100px]">{release.owner.display_name}</span>
-          </div>
-          <span className="text-slate-300">·</span>
-          <div className="flex items-center gap-1">
-            <User className="w-3 h-3 text-slate-400" />
-            <span>{formatDate(release.release_date)}</span>
-          </div>
+          )}
+          {release.owner && release.release_date && <span className="text-slate-300">·</span>}
+          {release.release_date && (
+            <div className="flex items-center gap-1">
+              <User className="w-3 h-3 text-slate-400" />
+              <span>{formatDate(release.release_date)}</span>
+            </div>
+          )}
         </div>
 
         {/* Pipeline stepper (only for non-cancelled) */}
@@ -251,6 +255,7 @@ export default function ReleaseCard({
             )}
           </div>
         )}
+
       </div>
     </div>
   );

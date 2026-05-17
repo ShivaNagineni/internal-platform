@@ -292,7 +292,7 @@ export default function ReleasesPage() {
   const releasedThisYear = releases.filter(
     (r) =>
       r.status === "RELEASED" &&
-      // Parse as local midnight to avoid UTC date-shift in behind-UTC timezones
+      r.release_date != null &&
       new Date(`${r.release_date}T00:00:00`).getFullYear() === currentYear
   ).length;
 

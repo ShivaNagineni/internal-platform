@@ -212,28 +212,30 @@ export default function ReleaseDetailModal({
                     Release Date
                   </p>
                   <p className="text-sm font-medium text-slate-800 mt-0.5">
-                    {formatDate(release.release_date)}
+                    {release.release_date ? formatDate(release.release_date) : "TBD"}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <span className="text-white text-xs font-semibold leading-none">
-                    {getInitials(release.owner.display_name)}
-                  </span>
+              {release.owner && (
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <span className="text-white text-xs font-semibold leading-none">
+                      {getInitials(release.owner.display_name)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                      Owner
+                    </p>
+                    <p className="text-sm font-medium text-slate-800 mt-0.5 truncate">
+                      {release.owner.display_name}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">
+                      {release.owner.email}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                    Owner
-                  </p>
-                  <p className="text-sm font-medium text-slate-800 mt-0.5 truncate">
-                    {release.owner.display_name}
-                  </p>
-                  <p className="text-xs text-slate-500 truncate">
-                    {release.owner.email}
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Description */}
@@ -301,6 +303,7 @@ export default function ReleaseDetailModal({
               )}
             </div>
           )}
+
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

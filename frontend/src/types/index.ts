@@ -120,11 +120,11 @@ export interface Release {
   title: string;
   version: string;
   description: string | null;
-  release_date: string;
+  release_date: string | null;
   status: ReleaseStatus;
   status_history: ReleaseStatusEntry[];
-  owner_id: string;
-  owner: ReleaseOwner;
+  owner_id: string | null;
+  owner: ReleaseOwner | null;
   changelog: string | null;
   created_at: string;
   updated_at: string;

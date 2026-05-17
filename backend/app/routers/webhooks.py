@@ -106,7 +106,7 @@ async def _handle_github_pr(payload: dict) -> None:
 
     action = payload.get("action")
     pr = payload.get("pull_request", {})
-    base_branch = pr.get("base", {}).get("ref", "")
+    base_branch = pr.get("base", {}).get("ref", "").lower()
     head_branch = pr.get("head", {}).get("ref", "")
     pr_title = pr.get("title", "")
     merged = pr.get("merged", False)
@@ -116,7 +116,9 @@ async def _handle_github_pr(payload: dict) -> None:
         logger.info("GitHub PR has no version pattern, skipping: %s", pr_title)
         return
 
-    version = version_match.group(0)
+    version = version_match.group(0).lstrip("v")
+
+    from app.services.notification_service import notify_release_status_change
 
     if action == "opened" and base_branch == "qa":
         existing = await Release.find_one(Release.version == version)
@@ -131,6 +133,7 @@ async def _handle_github_pr(payload: dict) -> None:
         )
         await release.insert()
         logger.info("Created release %s from GitHub PR", version)
+        await notify_release_status_change(str(release.id))
 
     elif action == "closed" and merged and base_branch == "qa":
         release = await Release.find_one(Release.version == version)
@@ -138,6 +141,7 @@ async def _handle_github_pr(payload: dict) -> None:
             advanced = await _advance_release_status(release, ReleaseStatus.STAGING)
             if advanced:
                 logger.info("Release %s advanced to STAGING", version)
+                await notify_release_status_change(str(release.id))
 
     elif action == "opened" and base_branch in ("main", "master"):
         release = await Release.find_one(Release.version == version)
@@ -145,6 +149,7 @@ async def _handle_github_pr(payload: dict) -> None:
             advanced = await _advance_release_status(release, ReleaseStatus.IN_PROGRESS)
             if advanced:
                 logger.info("Release %s advanced to IN_PROGRESS", version)
+                await notify_release_status_change(str(release.id))
 
     elif action == "closed" and merged and base_branch in ("main", "master"):
         release = await Release.find_one(Release.version == version)
@@ -152,6 +157,7 @@ async def _handle_github_pr(payload: dict) -> None:
             advanced = await _advance_release_status(release, ReleaseStatus.RELEASED)
             if advanced:
                 logger.info("Release %s advanced to RELEASED", version)
+                await notify_release_status_change(str(release.id))
 
 
 @router.post("/github")
@@ -324,18 +330,7 @@ async def _handle_block_action(payload: dict) -> None:
             await release.save()
             print(f"[SLACK ACTION] Successfully updated release {release.id} to {new_status.value}")
 
-            user = await User.get(release.owner_id)
-            if user:
-                from app.services.slack import slack_service
-                response_url = payload.get("response_url")
-                blocks = slack_service.build_release_notification(release, user, action_str)
-
-                if response_url:
-                    async with httpx.AsyncClient() as client:
-                        resp = await client.post(response_url, json={"replace_original": True, "blocks": blocks})
-                        print(f"[SLACK ACTION] Updated release Slack message via response_url, status={resp.status_code}")
-
-                from app.services.notification_service import notify_release_status_change
-                await notify_release_status_change(str(release.id))
+            from app.services.notification_service import notify_release_status_change
+            await notify_release_status_change(str(release.id))
         except Exception as e:
             print(f"[SLACK ACTION ERROR] {e}")

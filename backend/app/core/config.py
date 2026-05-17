@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     azure_ad_client_secret: str = ""
 
     github_webhook_secret: str = ""
+    github_token: str = ""
+    github_repos: str = ""  # comma-separated, e.g. "owner/repo1,owner/repo2"
+
+    def get_github_repos(self) -> list[str]:
+        return [r.strip() for r in self.github_repos.split(",") if r.strip()]
 
     slack_signing_secret: str = ""
     slack_bot_token: str = ""
