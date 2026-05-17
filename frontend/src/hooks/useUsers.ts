@@ -52,13 +52,3 @@ export function useToggleUserActive() {
   });
 }
 
-export function useSyncZohoUsers() {
-  const qc = useQueryClient();
-  return useMutation<{ created: number; updated: number; skipped: number; total: number }, Error>({
-    mutationFn: async () => {
-      const { data } = await api.post("/users/sync-zoho");
-      return data;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.all }),
-  });
-}

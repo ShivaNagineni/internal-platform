@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Users, RefreshCw, Search, Shield, Building2, ToggleLeft, ToggleRight, Edit2, Check, X } from "lucide-react";
+import { Users, Search, Shield, Building2, ToggleLeft, ToggleRight, Edit2, Check, X } from "lucide-react";
 import type { User, UserRole } from "@/types";
 import { cn, getInitials } from "@/lib/utils";
-import { useUsers, useUpdateUserRole, useUpdateUser, useToggleUserActive, useSyncZohoUsers } from "@/hooks/useUsers";
+import { useUsers, useUpdateUserRole, useUpdateUser, useToggleUserActive } from "@/hooks/useUsers";
 
 // ─── Role badge ───────────────────────────────────────────────────────────────
 
@@ -73,13 +73,11 @@ function InlineEdit({ value, onSave, placeholder }: { value: string; onSave: (v:
 export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [showInactive, setShowInactive] = useState(false);
-  const [syncResult, setSyncResult] = useState<string | null>(null);
 
   const { data: users = [], isLoading } = useUsers("name", !showInactive);
   const updateRole = useUpdateUserRole();
   const updateUser = useUpdateUser();
   const toggleActive = useToggleUserActive();
-  const syncZoho = useSyncZohoUsers();
 
   const filtered = users.filter((u) =>
     u.display_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -87,46 +85,16 @@ export default function UsersPage() {
     (u.department ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
-  function handleSync() {
-    setSyncResult(null);
-    syncZoho.mutate(undefined, {
-      onSuccess: (r) => setSyncResult(`Sync complete — ${r.created} created, ${r.updated} updated, ${r.skipped} unchanged`),
-      onError: (e) => setSyncResult(`Sync failed: ${e.message}`),
-    });
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            Team Members
-            <Users className="w-5 h-5 text-indigo-500" />
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">Manage roles and departments for all users.</p>
-        </div>
-        <button
-          onClick={handleSync}
-          disabled={syncZoho.isPending}
-          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-colors duration-150"
-        >
-          <RefreshCw className={cn("w-4 h-4", syncZoho.isPending && "animate-spin")} />
-          {syncZoho.isPending ? "Syncing…" : "Sync from Zoho People"}
-        </button>
+      <div>
+        <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+          Team Members
+          <Users className="w-5 h-5 text-indigo-500" />
+        </h1>
+        <p className="text-sm text-slate-500 mt-0.5">Manage roles and departments for all users.</p>
       </div>
-
-      {/* Sync result banner */}
-      {syncResult && (
-        <div className={cn(
-          "text-sm px-4 py-3 rounded-xl border",
-          syncResult.startsWith("Sync failed")
-            ? "bg-rose-50 text-rose-700 border-rose-200"
-            : "bg-emerald-50 text-emerald-700 border-emerald-200"
-        )}>
-          {syncResult}
-        </div>
-      )}
 
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
