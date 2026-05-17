@@ -117,15 +117,22 @@ async def notify_release_status_change(release_id: str):
     if release.status.value == "STAGING":
         from app.services.github_api import create_qa_to_main_pr
         from app.models.repository import Repository
+        if not release.main_pr_numbers:
+            release.main_pr_numbers = {}
         if release.repository_ids:
             for repo_id in release.repository_ids:
                 repo = await Repository.get(repo_id)
                 if repo:
-                    await create_qa_to_main_pr(
+                    results = await create_qa_to_main_pr(
                         release.version, release.title,
                         github_repo=repo.github_repo,
                         qa_branch=repo.qa_branch,
                         main_branch=repo.main_branch,
                     )
+                    for r in results:
+                        release.main_pr_numbers[str(repo_id)] = r["pr_number"]
         else:
-            await create_qa_to_main_pr(release.version, release.title)
+            results = await create_qa_to_main_pr(release.version, release.title)
+            for r in results:
+                release.main_pr_numbers["default"] = r["pr_number"]
+        await release.save()
