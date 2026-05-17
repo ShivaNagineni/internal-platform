@@ -1,6 +1,6 @@
 # Integration Setup Guide
 
-This document covers how to create and configure the Slack and GitHub integrations used by Internal Platform for release automation and notifications.
+This document covers how to create and configure the Slack, GitHub, and Zoho integrations used by Internal Platform for release automation, notifications, and authentication.
 
 ---
 
@@ -9,8 +9,9 @@ This document covers how to create and configure the Slack and GitHub integratio
 1. [Slack Setup](#1-slack-setup)
 2. [GitHub Personal Access Token](#2-github-personal-access-token)
 3. [GitHub Webhook](#3-github-webhook)
-4. [Environment Variables Reference](#4-environment-variables-reference)
-5. [Local Development (ngrok)](#5-local-development-ngrok)
+4. [Zoho OAuth Setup](#4-zoho-oauth-setup)
+5. [Environment Variables Reference](#5-environment-variables-reference)
+6. [Local Development (ngrok)](#6-local-development-ngrok)
 
 ---
 
@@ -54,7 +55,7 @@ This is required so that "Approve Deployment", "Approve Release", and "Reject Re
    ```
    https://your-domain.com/webhooks/slack
    ```
-   For local development use your ngrok URL (see [Section 5](#5-local-development-ngrok)):
+   For local development use your ngrok URL (see [Section 6](#6-local-development-ngrok)):
    ```
    https://xxxx-xxxx.ngrok-free.app/webhooks/slack
    ```
@@ -177,7 +178,88 @@ After saving the webhook GitHub sends a **ping** event. Go to the webhook page, 
 
 ---
 
-## 4. Environment Variables Reference
+## 4. Zoho OAuth Setup
+
+Zoho OAuth lets all employees sign in with their Zoho account, in addition to Azure AD. Users from Zoho who don't have an Azure AD account are automatically provisioned in the platform on first login.
+
+### 4.1 Open the Zoho API Console
+
+Go to [api-console.zoho.com](https://api-console.zoho.com) and sign in with your Zoho account.
+
+### 4.2 Create the OAuth client
+
+1. Click **Add Client**.
+2. **Choose the correct client type — this matters:**
+
+   | Type | Use this? | Why |
+   |---|---|---|
+   | **Server-based Applications** | ✅ Yes | Backend holds the client secret and exchanges the code server-side |
+   | Client-based Applications | ❌ No | For SPAs with no backend secret — wrong for this setup |
+   | Self Client | ❌ No | For personal scripts, not user-facing login |
+
+3. Select **Server-based Applications** and fill in the form:
+
+   | Field | Value |
+   |---|---|
+   | **Client Name** | `Internal Platform` |
+   | **Homepage URL** | `http://localhost:3000` (update to prod URL when deploying) |
+   | **Authorized Redirect URIs** | `http://localhost:3000/auth/zoho/callback` |
+
+4. Click **CREATE**.
+
+5. Zoho shows your **Client ID** and **Client Secret** — copy both immediately.
+
+   - Client ID format: `1000.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`
+   - Client Secret: a long alphanumeric string
+
+6. Add them to `backend/.env`:
+   ```env
+   ZOHO_CLIENT_ID=1000.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+   ZOHO_CLIENT_SECRET=your-client-secret
+   ZOHO_REDIRECT_URI=http://localhost:3000/auth/zoho/callback
+   ```
+
+### 4.3 Delete a wrongly created client
+
+If you accidentally created a **Client-based Applications** client (or any other wrong type) you can delete it cleanly:
+
+1. Go to [api-console.zoho.com](https://api-console.zoho.com).
+2. Find the wrong client in the list and click on it to open its details.
+3. Click the **Delete** button (usually in the top-right or bottom of the client details page).
+4. Confirm the deletion.
+
+> Deleting a client immediately invalidates its Client ID and Client Secret. If you had already added those credentials to `.env`, replace them with the new Server-based client's credentials and restart the backend.
+
+### 4.4 Required OAuth scopes
+
+The platform requests these scopes during login:
+
+| Scope | Purpose |
+|---|---|
+| `openid` | Required for OIDC — enables the userinfo endpoint |
+| `profile` | User's display name |
+| `email` | User's email address (used to link with existing Azure AD accounts) |
+
+No admin-level or data-write scopes are needed.
+
+### 4.5 How account linking works
+
+When a Zoho user signs in for the first time:
+
+- If a user with the **same email** already exists (e.g. from Azure AD sync), the Zoho UID is linked to that account — the user keeps their existing role and data.
+- If no matching email exists, a new account is created with the **EMPLOYEE** role. A manager can promote them via the Users page.
+
+### 4.6 Summary of Zoho values to collect
+
+| `.env` variable | Where to find it |
+|---|---|
+| `ZOHO_CLIENT_ID` | API Console → your client → Client ID |
+| `ZOHO_CLIENT_SECRET` | API Console → your client → Client Secret |
+| `ZOHO_REDIRECT_URI` | Set to `http://localhost:3000/auth/zoho/callback` (or your prod URL) |
+
+---
+
+## 5. Environment Variables Reference
 
 All variables live in `backend/.env`. Copy `backend/.env.example` as a starting point.
 
@@ -191,30 +273,38 @@ AZURE_AD_TENANT_ID=your-tenant-id
 AZURE_AD_CLIENT_ID=your-client-id
 AZURE_AD_CLIENT_SECRET=your-client-secret
 
+# ── Zoho OAuth (authentication) ───────────────────────────────────────────────
+ZOHO_CLIENT_ID=1000.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+ZOHO_CLIENT_SECRET=your-zoho-client-secret
+ZOHO_REDIRECT_URI=http://localhost:3000/auth/zoho/callback
+
 # ── GitHub ────────────────────────────────────────────────────────────────────
 GITHUB_TOKEN=github_pat_...          # Fine-grained PAT (Contents + Pull requests R/W)
 GITHUB_WEBHOOK_SECRET=...            # Random secret shared with GitHub webhook config
 GITHUB_REPOS=ShivaNagineni/internal-platform   # Comma-separated for multiple repos
 
 # ── Slack ─────────────────────────────────────────────────────────────────────
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/{WORKSPACE}/{CHANNEL}/{TOKEN}   # Incoming webhook URL
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/{WORKSPACE}/{CHANNEL}/{TOKEN}
 SLACK_SIGNING_SECRET=...             # From Basic Information → App Credentials
+
+# ── App ───────────────────────────────────────────────────────────────────────
+SECRET_KEY=change-me-in-production   # Used to sign Zoho session JWTs
 ```
 
 ---
 
-## 5. Local Development (ngrok)
+## 6. Local Development (ngrok)
 
 Both the GitHub webhook and Slack interactivity need a **publicly reachable URL** to call back into your laptop. ngrok creates a secure tunnel.
 
-### 5.1 Install ngrok
+### 6.1 Install ngrok
 
 ```bash
 brew install ngrok       # macOS
 # or download from https://ngrok.com/download
 ```
 
-### 5.2 Start the tunnel
+### 6.2 Start the tunnel
 
 ```bash
 ngrok http 8000
@@ -226,7 +316,7 @@ ngrok prints a forwarding URL like:
 Forwarding  https://xxxx-xxxx.ngrok-free.app -> http://localhost:8000
 ```
 
-### 5.3 Update the two places that need the URL
+### 6.3 Update the two places that need the URL
 
 | Where | Value to set |
 |---|---|
@@ -235,7 +325,7 @@ Forwarding  https://xxxx-xxxx.ngrok-free.app -> http://localhost:8000
 
 > The free ngrok tier gives a new random URL every time you restart it. Update both places each time.
 
-### 5.4 Verify the tunnel is working
+### 6.4 Verify the tunnel is working
 
 ```bash
 curl https://xxxx-xxxx.ngrok-free.app/health
@@ -258,6 +348,13 @@ GitHub
   [ ] Webhook added to repo pointing to /webhooks/github
   [ ] Webhook secret generated and set in both GitHub and → GITHUB_WEBHOOK_SECRET
   [ ] GITHUB_REPOS set to owner/repo
+
+Zoho
+  [ ] Server-based Applications client created at api-console.zoho.com
+  [ ] Any wrongly typed clients deleted
+  [ ] Client ID copied → ZOHO_CLIENT_ID
+  [ ] Client Secret copied → ZOHO_CLIENT_SECRET
+  [ ] Redirect URI set to /auth/zoho/callback → ZOHO_REDIRECT_URI
 
 Local dev
   [ ] ngrok running on port 8000
