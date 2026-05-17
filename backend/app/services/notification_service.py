@@ -107,8 +107,12 @@ async def notify_release_status_change(release_id: str):
         )
         await n.insert()
 
-    from app.services.slack import slack_service
-    await slack_service.send_release_webhook(release, owner)
+    # IN_PROGRESS is an automatic intermediate state (qa→main PR just opened).
+    # The STAGING message already has the "Approve Release" button, so skip
+    # sending a duplicate Slack notification here.
+    if release.status.value != "IN_PROGRESS":
+        from app.services.slack import slack_service
+        await slack_service.send_release_webhook(release, owner)
 
     if release.status.value == "STAGING":
         from app.services.github_api import create_qa_to_main_pr
