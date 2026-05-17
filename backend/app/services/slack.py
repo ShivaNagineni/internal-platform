@@ -144,18 +144,16 @@ class SlackService:
         ]
 
     async def send_release_webhook(self, release, user=None) -> None:
-        channel = settings.slack_digest_channel
-        if not channel:
+        url = settings.slack_webhook_url
+        if not url:
             return
         blocks = self.build_release_notification(release, user, release.status.value.title())
-        text = f"Release {release.version} - {release.status.value}"
-        if release.slack_ts:
-            await self.update_message(channel, release.slack_ts, blocks, text=text)
-        else:
-            ts = await self.post_message(channel, blocks, text=text)
-            if ts:
-                release.slack_ts = ts
-                await release.save()
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(url, json={"blocks": blocks})
+                print(f"[SLACK WEBHOOK] Posted release {release.id} ({release.status.value}), status={resp.status_code}")
+        except Exception as e:
+            print(f"[SLACK WEBHOOK ERROR] send_release_webhook failed: {e}")
 
     def build_release_notification(self, release, user, action: str) -> list[dict]:
         status_emoji = {
@@ -189,7 +187,7 @@ class SlackService:
                 "elements": [
                     {
                         "type": "button",
-                        "text": {"type": "plain_text", "text": "Start Deployment", "emoji": True},
+                        "text": {"type": "plain_text", "text": "Approve Deployment", "emoji": True},
                         "style": "primary",
                         "value": f"start_release:{release.id}",
                         "action_id": "release_start",
@@ -197,7 +195,7 @@ class SlackService:
                 ],
             })
             blocks.append({"type": "divider"})
-        elif release.status.value == "STAGING":
+        elif release.status.value in ("STAGING", "IN_PROGRESS"):
             blocks.append({
                 "type": "actions",
                 "elements": [

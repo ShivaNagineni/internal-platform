@@ -7,8 +7,8 @@ import StatusBadge from "@/components/StatusBadge";
 
 const PIPELINE_STEPS: { status: ReleaseStatus; label: string }[] = [
   { status: "PLANNED", label: "Planned" },
-  { status: "IN_PROGRESS", label: "In Progress" },
-  { status: "STAGING", label: "Staging" },
+  { status: "STAGING", label: "In QA" },
+  { status: "IN_PROGRESS", label: "Releasing" },
   { status: "RELEASED", label: "Released" },
 ];
 
@@ -37,9 +37,9 @@ const NEXT_STATUS: Partial<Record<ReleaseStatus, ReleaseStatus>> = {
 };
 
 const NEXT_LABEL: Partial<Record<ReleaseStatus, string>> = {
-  PLANNED: "Start Progress",
-  IN_PROGRESS: "Move to Staging",
-  STAGING: "Mark Released",
+  PLANNED: "Approve Deployment",
+  STAGING: "Approve Release",
+  IN_PROGRESS: "Approve Release",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -55,6 +55,8 @@ interface Props {
   currentUserRole: UserRole;
   onEdit?: (release: Release) => void;
   onStatusAdvance?: (id: string, status: ReleaseStatus) => void;
+  onDeploy?: (id: string) => void;
+  onApproveRelease?: (id: string) => void;
   onClick: (release: Release) => void;
 }
 
@@ -65,6 +67,8 @@ export default function ReleaseCard({
   currentUserRole,
   onEdit,
   onStatusAdvance,
+  onDeploy,
+  onApproveRelease,
   onClick,
 }: Props) {
   const canManage = currentUserRole === "MANAGER" || currentUserRole === "ADMIN" || currentUserRole === "OWNER";
@@ -76,7 +80,11 @@ export default function ReleaseCard({
 
   function handleAdvance(e: React.MouseEvent) {
     e.stopPropagation();
-    if (nextStatus && onStatusAdvance) {
+    if (release.status === "PLANNED") {
+      if (onDeploy) onDeploy(release.id);
+    } else if (release.status === "STAGING" || release.status === "IN_PROGRESS") {
+      if (onApproveRelease) onApproveRelease(release.id);
+    } else if (nextStatus && onStatusAdvance) {
       onStatusAdvance(release.id, nextStatus);
     }
   }

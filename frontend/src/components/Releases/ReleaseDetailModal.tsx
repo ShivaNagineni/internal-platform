@@ -8,8 +8,8 @@ import StatusBadge from "@/components/StatusBadge";
 
 const PIPELINE_STEPS: { status: ReleaseStatus; label: string }[] = [
   { status: "PLANNED", label: "Planned" },
-  { status: "IN_PROGRESS", label: "In Progress" },
-  { status: "STAGING", label: "Staging" },
+  { status: "STAGING", label: "In QA" },
+  { status: "IN_PROGRESS", label: "Releasing" },
   { status: "RELEASED", label: "Released" },
 ];
 
@@ -28,9 +28,9 @@ const NEXT_STATUS: Partial<Record<ReleaseStatus, ReleaseStatus>> = {
 };
 
 const NEXT_LABEL: Partial<Record<ReleaseStatus, string>> = {
-  PLANNED: "Start Progress",
-  IN_PROGRESS: "Move to Staging",
-  STAGING: "Mark as Released",
+  PLANNED: "Approve Deployment",
+  STAGING: "Approve Release",
+  IN_PROGRESS: "Approve Release",
 };
 
 const ADVANCE_BUTTON_COLORS: Partial<Record<ReleaseStatus, string>> = {
@@ -47,6 +47,8 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   currentUserRole: UserRole;
   onStatusChange: (id: string, status: ReleaseStatus) => void;
+  onDeploy: (id: string) => void;
+  onApproveRelease: (id: string) => void;
 }
 
 // ─── Stepper sub-component ────────────────────────────────────────────────────
@@ -138,10 +140,12 @@ export default function ReleaseDetailModal({
   onOpenChange,
   currentUserRole,
   onStatusChange,
+  onDeploy,
+  onApproveRelease,
 }: Props) {
   if (!release) return null;
 
-  const canManage = currentUserRole === "MANAGER" || currentUserRole === "ADMIN";
+  const canManage = currentUserRole === "MANAGER" || currentUserRole === "ADMIN" || currentUserRole === "OWNER";
   const isCancelled = release.status === "CANCELLED";
   const isTerminal = release.status === "RELEASED" || isCancelled;
   const nextStatus = NEXT_STATUS[release.status];
@@ -149,7 +153,13 @@ export default function ReleaseDetailModal({
   const advanceButtonColor = ADVANCE_BUTTON_COLORS[release.status];
 
   function handleAdvance() {
-    if (nextStatus) {
+    if (release.status === "PLANNED") {
+      onDeploy(release.id);
+      onOpenChange(false);
+    } else if (release.status === "STAGING" || release.status === "IN_PROGRESS") {
+      onApproveRelease(release.id);
+      onOpenChange(false);
+    } else if (nextStatus) {
       onStatusChange(release.id, nextStatus);
       onOpenChange(false);
     }
