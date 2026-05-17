@@ -94,9 +94,8 @@ async def create_qa_to_main_pr(
     github_repo: str | None = None,
     qa_branch: str | None = None,
     main_branch: str | None = None,
-) -> list[str]:
-    """Create a PR from qa → main. If github_repo is provided, target only that repo.
-    Otherwise fall back to every repo in settings.github_repos. Returns list of PR URLs created."""
+) -> list[dict[str, int | str]]:
+    """Create a PR from qa → main. Returns list of {pr_number, url, repo} dicts."""
     settings = get_settings()
     if not settings.github_token:
         logger.warning("GitHub token not configured — skipping PR creation")
@@ -158,7 +157,7 @@ async def create_qa_to_main_pr(
             if check_resp.status_code == 200 and check_resp.json():
                 existing = check_resp.json()[0]
                 logger.info("PR already exists for %s: %s", repo, existing["html_url"])
-                created.append(existing["html_url"])
+                created.append({"pr_number": existing["number"], "url": existing["html_url"], "repo": repo})
                 continue
 
             resp = await client.post(
@@ -172,9 +171,9 @@ async def create_qa_to_main_pr(
                 },
             )
             if resp.status_code == 201:
-                url = resp.json()["html_url"]
-                logger.info("Created PR for %s: %s", repo, url)
-                created.append(url)
+                data = resp.json()
+                logger.info("Created PR for %s: %s", repo, data["html_url"])
+                created.append({"pr_number": data["number"], "url": data["html_url"], "repo": repo})
             else:
                 logger.error(
                     "Failed to create PR for %s: HTTP %s — %s",

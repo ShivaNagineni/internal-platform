@@ -207,11 +207,13 @@ async def _handle_github_pr(payload: dict) -> None:
     elif action == "opened" and branch_role == "main":
         if candidate_release:
             matched_repo = await Repository.find_one(Repository.github_repo == pr_repo_full_name)
+            if not candidate_release.main_pr_numbers:
+                candidate_release.main_pr_numbers = {}
             if matched_repo:
-                if not candidate_release.main_pr_numbers:
-                    candidate_release.main_pr_numbers = {}
                 candidate_release.main_pr_numbers[str(matched_repo.id)] = pr.get("number")
-                await candidate_release.save()
+            else:
+                candidate_release.main_pr_numbers["default"] = pr.get("number")
+            await candidate_release.save()
             advanced = await _advance_release_status(candidate_release, ReleaseStatus.IN_PROGRESS)
             if advanced:
                 logger.info("Release %s advanced to IN_PROGRESS", version)
