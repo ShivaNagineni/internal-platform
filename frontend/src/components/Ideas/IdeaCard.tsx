@@ -14,27 +14,27 @@ const CATEGORY_CONFIG: Record<
   PRODUCT: {
     label: "Product",
     emoji: "📦",
-    pill: "bg-violet-100 text-violet-700 border-violet-200",
+    pill: "bg-violet-100 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800/60",
   },
   PROCESS: {
     label: "Process",
     emoji: "🔄",
-    pill: "bg-amber-100 text-amber-700 border-amber-200",
+    pill: "bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60",
   },
   TECH: {
     label: "Tech",
     emoji: "💻",
-    pill: "bg-sky-100 text-sky-700 border-sky-200",
+    pill: "bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/60",
   },
   CULTURE: {
     label: "Culture",
     emoji: "🌱",
-    pill: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    pill: "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60",
   },
   OTHER: {
     label: "Other",
     emoji: "🌀",
-    pill: "bg-slate-100 text-slate-600 border-slate-200",
+    pill: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700",
   },
 };
 
@@ -81,9 +81,9 @@ export default function IdeaCard({
     <article
       onClick={() => onClick(idea)}
       className={cn(
-        "group bg-white rounded-xl border border-slate-100 shadow-sm cursor-pointer",
+        "group bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm cursor-pointer",
         "transition-all duration-200 ease-out",
-        "hover:shadow-md hover:-translate-y-0.5",
+        "hover:shadow-md hover:border-slate-200 dark:hover:border-slate-700 hover:-translate-y-0.5",
         "select-none"
       )}
     >
@@ -103,20 +103,20 @@ export default function IdeaCard({
 
       {/* Title */}
       <div className="px-4 pb-1.5">
-        <h3 className="text-sm font-semibold text-slate-900 leading-snug line-clamp-2">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-white leading-snug line-clamp-2">
           {idea.title}
         </h3>
       </div>
 
       {/* Description */}
       <div className="px-4 pb-3">
-        <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
+        <p className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed line-clamp-3">
           {idea.description}
         </p>
       </div>
 
       {/* Divider */}
-      <div className="mx-4 border-t border-slate-100" />
+      <div className="mx-4 border-t border-slate-100 dark:border-slate-800" />
 
       {/* Bottom row: author + upvote + date */}
       <div className="px-4 py-3 flex items-center gap-2">
@@ -128,12 +128,12 @@ export default function IdeaCard({
         </div>
 
         {/* Author name */}
-        <span className="text-xs text-slate-500 flex-1 truncate min-w-0">
+        <span className="text-xs text-slate-500 dark:text-slate-400 flex-1 truncate min-w-0">
           {idea.author.display_name}
         </span>
 
         {/* Date */}
-        <span className="text-[10px] text-slate-400 flex-shrink-0 hidden sm:block">
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 flex-shrink-0 hidden sm:block">
           {relativeDate}
         </span>
 
@@ -145,8 +145,8 @@ export default function IdeaCard({
           className={cn(
             "flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-medium transition-all duration-150 flex-shrink-0",
             idea.voted_by_me
-              ? "bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100"
-              : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700",
+              ? "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200 dark:border-indigo-800/60 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/60"
+              : "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200",
             voteDisabled && "opacity-40 cursor-not-allowed",
             voteAnimating && "scale-110"
           )}
@@ -154,7 +154,7 @@ export default function IdeaCard({
           <ThumbsUp
             className={cn(
               "w-3 h-3 transition-transform duration-150",
-              idea.voted_by_me ? "fill-indigo-500 text-indigo-500" : "",
+              idea.voted_by_me ? "fill-indigo-500 text-indigo-500 dark:fill-indigo-400 dark:text-indigo-400" : "",
               voteAnimating && "animate-bounce"
             )}
           />

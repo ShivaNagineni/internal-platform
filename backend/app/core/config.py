@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     def get_github_repos(self) -> list[str]:
         return [r.strip() for r in self.github_repos.split(",") if r.strip()]
 
+    zoho_client_id: str = ""
+    zoho_client_secret: str = ""
+    zoho_redirect_uri: str = "http://localhost:3000/auth/zoho/callback"
+
     slack_signing_secret: str = ""
     slack_bot_token: str = ""
     slack_webhook_url: str = ""

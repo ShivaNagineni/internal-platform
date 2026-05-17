@@ -1,21 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMsal, useAccount } from "@azure/msal-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { getZohoUser, clearZohoSession, isZohoAuthenticated } from "@/lib/zohoAuth";
 import {
   LayoutDashboard,
   CalendarDays,
   Lightbulb,
   Rocket,
+  Users,
+  Building2,
   Bell,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import NotificationDrawer from "@/components/Layout/NotificationDrawer";
 import ProfileModal from "@/components/Layout/ProfileModal";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useCurrentUser, useUpdateTheme } from "@/hooks/useUsers";
 
 interface NavItem {
   label: string;
@@ -28,6 +34,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Leave Tracker", to: "/leave", icon: CalendarDays },
   { label: "Innovation Hub", to: "/ideas", icon: Lightbulb },
   { label: "Release Control", to: "/releases", icon: Rocket },
+  { label: "Team Members", to: "/users", icon: Users },
+  // { label: "Departments", to: "/departments", icon: Building2 },
 ];
 
 const ROUTE_TITLES: Record<string, string> = {
@@ -35,6 +43,8 @@ const ROUTE_TITLES: Record<string, string> = {
   "/leave": "Leave Tracker",
   "/ideas": "Innovation Hub",
   "/releases": "Release Control",
+  "/users": "Team Members",
+  "/departments": "Departments",
 };
 
 function getPageTitle(pathname: string): string {
@@ -53,39 +63,58 @@ export default function Layout({ children }: LayoutProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { data: notifications = [] } = useNotifications();
+  const { data: currentUser } = useCurrentUser();
+  const updateTheme = useUpdateTheme();
+
+  useEffect(() => {
+    if (currentUser?.theme) {
+      localStorage.setItem("theme", currentUser.theme);
+      if (currentUser.theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
+  }, [currentUser?.theme]);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  const displayName: string = account?.name ?? "User";
-  const email: string = account?.username ?? "";
+  const zohoUser = isZohoAuthenticated() ? getZohoUser() : null;
+  const displayName: string = zohoUser?.display_name ?? account?.name ?? "User";
+  const email: string = zohoUser?.email ?? account?.username ?? "";
   const initials: string = getInitials(displayName);
   const pageTitle: string = getPageTitle(location.pathname);
 
   function handleSignOut(): void {
-    instance.logoutPopup({
-      postLogoutRedirectUri: window.location.origin,
-    }).catch(console.error);
+    if (zohoUser) {
+      clearZohoSession();
+      window.location.href = "/";
+    } else {
+      instance.logoutPopup({
+        postLogoutRedirectUri: window.location.origin,
+      }).catch(console.error);
+    }
   }
 
   return (
     <Tooltip.Provider delayDuration={200}>
-      <div className="flex h-screen overflow-hidden bg-slate-50">
+      <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
         {/* Sidebar */}
         <aside
           className={cn(
-            "fixed left-0 top-0 h-full bg-white border-r border-slate-200 shadow-[1px_0_12px_0_rgba(15,23,42,0.06)] flex flex-col z-20 transition-all duration-300 ease-in-out",
+            "fixed left-0 top-0 h-full bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[1px_0_12px_0_rgba(15,23,42,0.06)] flex flex-col z-20 transition-all duration-300 ease-in-out",
             sidebarCollapsed ? "w-20" : "w-64"
           )}
         >
           {/* Logo area */}
-          <div className="px-5 py-5 border-b border-slate-100 flex items-center justify-between">
+          <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md flex-shrink-0">
                 <span className="text-white text-sm font-bold tracking-tight">IP</span>
               </div>
               {!sidebarCollapsed && (
                 <div className="min-w-0 animate-in fade-in duration-200">
-                  <p className="text-sm font-semibold text-slate-900 leading-tight truncate">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white leading-tight truncate">
                     Internal Platform
                   </p>
                   <p className="text-xs text-slate-400 leading-tight truncate mt-0.5">
@@ -113,8 +142,8 @@ export default function Layout({ children }: LayoutProps) {
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group select-none",
                     sidebarCollapsed && "justify-center px-0",
                     isActive
-                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200 dark:shadow-none"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white"
                   )
                 }
               >
@@ -125,7 +154,7 @@ export default function Layout({ children }: LayoutProps) {
                         "w-5 h-5 flex-shrink-0 transition-colors duration-150",
                         isActive
                           ? "text-white"
-                          : "text-slate-400 group-hover:text-slate-600"
+                          : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                       )}
                     />
                     {!sidebarCollapsed && <span className="truncate animate-in fade-in duration-200">{label}</span>}
@@ -136,10 +165,10 @@ export default function Layout({ children }: LayoutProps) {
           </nav>
 
           {/* Bottom user section */}
-          <div className="px-3 py-4 border-t border-slate-100">
+          <div className="px-3 py-4 border-t border-slate-100 dark:border-slate-800">
             <div
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-100 transition-all",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 transition-all",
                 sidebarCollapsed && "justify-center px-1"
               )}
             >
@@ -156,7 +185,7 @@ export default function Layout({ children }: LayoutProps) {
               {!sidebarCollapsed && (
                 <>
                   <div className="flex-1 min-w-0 animate-in fade-in duration-200">
-                    <p className="text-xs font-semibold text-slate-800 truncate leading-tight">
+                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate leading-tight">
                       {displayName}
                     </p>
                     <p className="text-[10px] text-slate-400 truncate leading-tight mt-0.5">
@@ -167,7 +196,7 @@ export default function Layout({ children }: LayoutProps) {
                   <button
                     onClick={handleSignOut}
                     title="Sign out"
-                    className="flex-shrink-0 p-1.5 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors duration-150"
+                    className="flex-shrink-0 p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors duration-150"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                   </button>
@@ -185,13 +214,13 @@ export default function Layout({ children }: LayoutProps) {
           )}
         >
           {/* Top header bar */}
-          <header className="h-16 flex-shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10 shadow-[0_1px_4px_0_rgba(15,23,42,0.04)]">
+          <header className="h-16 flex-shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 z-10 shadow-sm transition-colors duration-300">
             <div className="flex items-center gap-3">
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                   <button
                     onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                    className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                    className="p-2 rounded-lg text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     {sidebarCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
                   </button>
@@ -207,17 +236,29 @@ export default function Layout({ children }: LayoutProps) {
                   </Tooltip.Content>
                 </Tooltip.Portal>
               </Tooltip.Root>
-              <h1 className="text-base font-semibold text-slate-800 tracking-tight">
+              <h1 className="text-base font-semibold text-slate-800 dark:text-white tracking-tight">
                 {pageTitle}
               </h1>
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Theme toggle */}
+              <button
+                onClick={() => {
+                  const newTheme = currentUser?.theme === "dark" ? "light" : "dark";
+                  if (currentUser) updateTheme.mutate({ id: currentUser.id, theme: newTheme });
+                }}
+                title={currentUser?.theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                className="p-2 rounded-lg text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
+              >
+                {currentUser?.theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+
               {/* Notification bell */}
               <button
                 onClick={() => setDrawerOpen(true)}
                 title="Notifications"
-                className="relative p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-150"
+                className="relative p-2 rounded-lg text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
@@ -239,7 +280,7 @@ export default function Layout({ children }: LayoutProps) {
           </header>
 
           {/* Scrollable page content */}
-          <main className="flex-1 overflow-y-auto bg-slate-50">
+          <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
             <div className="p-6 min-h-full">
               {children}
             </div>

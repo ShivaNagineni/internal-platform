@@ -15,7 +15,7 @@ const SCORING_CRITERIA = [
     desc: "Awarded when an idea is successfully added to the Innovation Hub.",
     icon: Sparkles,
     color: "from-amber-500 to-orange-500",
-    bg: "bg-amber-50 border-amber-100 text-amber-700",
+    bg: "bg-amber-50 dark:bg-amber-950/80 border-amber-100 dark:border-amber-800 text-amber-700 dark:text-amber-300",
   },
   {
     title: "Team Endorsement",
@@ -23,7 +23,7 @@ const SCORING_CRITERIA = [
     desc: "Awarded for each peer vote received during the weekly discussion.",
     icon: ThumbsUp,
     color: "from-blue-500 to-indigo-500",
-    bg: "bg-blue-50 border-blue-100 text-blue-700",
+    bg: "bg-blue-50 dark:bg-blue-950/80 border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300",
   },
   {
     title: "Merit Selection",
@@ -31,7 +31,7 @@ const SCORING_CRITERIA = [
     desc: "Awarded when the team votes an idea into the active Sprint (Review/Approved).",
     icon: CheckCircle2,
     color: "from-emerald-500 to-teal-500",
-    bg: "bg-emerald-50 border-emerald-100 text-emerald-700",
+    bg: "bg-emerald-50 dark:bg-emerald-950/80 border-emerald-100 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300",
   },
   {
     title: "Execution Milestone",
@@ -39,7 +39,7 @@ const SCORING_CRITERIA = [
     desc: "Awarded upon successful deployment/delivery of the feature.",
     icon: Rocket,
     color: "from-purple-500 to-pink-500",
-    bg: "bg-purple-50 border-purple-100 text-purple-700",
+    bg: "bg-purple-50 dark:bg-purple-950/80 border-purple-100 dark:border-purple-800 text-purple-700 dark:text-purple-300",
   },
 ];
 
@@ -55,7 +55,7 @@ export default function LeaderboardModal({ open, onOpenChange }: Props) {
           className={cn(
             "fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
             "w-full max-w-3xl max-h-[90vh] overflow-y-auto",
-            "bg-white rounded-2xl shadow-2xl border border-slate-100",
+            "bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -92,8 +92,8 @@ export default function LeaderboardModal({ open, onOpenChange }: Props) {
             {/* Scoring Framework */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Award className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-base font-bold text-slate-900 uppercase tracking-wide">
+                <Award className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white uppercase tracking-wide">
                   The Scoring Framework
                 </h3>
               </div>
@@ -104,7 +104,7 @@ export default function LeaderboardModal({ open, onOpenChange }: Props) {
                   return (
                     <div
                       key={idx}
-                      className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-md hover:border-slate-200 transition-all duration-200 flex items-start gap-4 group"
+                      className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-200 flex items-start gap-4 group"
                     >
                       <div
                         className={cn(
@@ -116,7 +116,7 @@ export default function LeaderboardModal({ open, onOpenChange }: Props) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <h4 className="text-sm font-bold text-slate-900 truncate">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
                             {crit.title}
                           </h4>
                           <span
@@ -128,7 +128,7 @@ export default function LeaderboardModal({ open, onOpenChange }: Props) {
                             {crit.points}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                        <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 leading-relaxed">
                           {crit.desc}
                         </p>
                       </div>
@@ -143,11 +143,11 @@ export default function LeaderboardModal({ open, onOpenChange }: Props) {
               <div className="flex items-center justify-between gap-2 mb-4">
                 <div className="flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-amber-500" />
-                  <h3 className="text-base font-bold text-slate-900 uppercase tracking-wide">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white uppercase tracking-wide">
                     Top Contributors Leaderboard
                   </h3>
                 </div>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-slate-400 dark:text-slate-500">
                   {users.length} Active Member{users.length !== 1 ? "s" : ""}
                 </span>
               </div>
@@ -161,25 +161,25 @@ export default function LeaderboardModal({ open, onOpenChange }: Props) {
                   {users.map((user, idx) => {
                     const rank = idx + 1;
                     let rankBadge = (
-                      <span className="w-7 h-7 rounded-lg bg-slate-100 font-bold text-slate-600 flex items-center justify-center text-xs">
+                      <span className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs">
                         #{rank}
                       </span>
                     );
                     if (rank === 1) {
                       rankBadge = (
-                        <span className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 border border-amber-200 font-black flex items-center justify-center text-sm shadow-sm" title="Rank 1">
+                        <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-black flex items-center justify-center text-sm shadow-sm" title="Rank 1">
                           🥇
                         </span>
                       );
                     } else if (rank === 2) {
                       rankBadge = (
-                        <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 font-black flex items-center justify-center text-sm shadow-sm" title="Rank 2">
+                        <span className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-black flex items-center justify-center text-sm shadow-sm" title="Rank 2">
                           🥈
                         </span>
                       );
                     } else if (rank === 3) {
                       rankBadge = (
-                        <span className="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 border border-orange-200 font-black flex items-center justify-center text-sm shadow-sm" title="Rank 3">
+                        <span className="w-7 h-7 rounded-lg bg-orange-100 dark:bg-orange-950/80 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/60 font-black flex items-center justify-center text-sm shadow-sm" title="Rank 3">
                           🥉
                         </span>
                       );
@@ -191,11 +191,11 @@ export default function LeaderboardModal({ open, onOpenChange }: Props) {
                       <div
                         key={user.id}
                         className={cn(
-                          "flex items-center gap-4 p-3.5 rounded-xl border border-slate-100 transition-all duration-150 bg-white",
-                          rank === 1 && "border-amber-200 bg-amber-50/20 shadow-sm",
-                          rank === 2 && "border-slate-200 bg-slate-50/20",
-                          rank === 3 && "border-orange-200 bg-orange-50/20",
-                          "hover:shadow-md hover:border-indigo-200"
+                          "flex items-center gap-4 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 transition-all duration-150 bg-white dark:bg-slate-800/60",
+                          rank === 1 && "border-amber-200 dark:border-amber-800/80 bg-amber-50/20 dark:bg-amber-950/30 shadow-sm",
+                          rank === 2 && "border-slate-200 dark:border-slate-700/80 bg-slate-50/20 dark:bg-slate-800/40",
+                          rank === 3 && "border-orange-200 dark:border-orange-800/80 bg-orange-50/20 dark:bg-orange-950/30",
+                          "hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800/80"
                         )}
                       >
                         <div className="flex-shrink-0">{rankBadge}</div>
@@ -206,26 +206,26 @@ export default function LeaderboardModal({ open, onOpenChange }: Props) {
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-bold text-slate-900 truncate">
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                               {user.display_name}
                             </h4>
                             {user.role === "ADMIN" && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-200 flex-shrink-0">
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 flex-shrink-0">
                                 ADMIN
                               </span>
                             )}
                           </div>
                           {user.department && (
-                            <p className="text-xs text-slate-500 truncate mt-0.5">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                               {user.department}
                             </p>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-1.5 flex-shrink-0 shadow-inner">
-                          <Award className="w-4 h-4 text-indigo-600" />
-                          <span className="text-sm font-extrabold text-indigo-700">
-                            {user.points} <span className="text-xs font-semibold text-indigo-500 uppercase">pts</span>
+                        <div className="flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-100 dark:border-indigo-800/80 rounded-xl px-3 py-1.5 flex-shrink-0 shadow-inner">
+                          <Award className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                          <span className="text-sm font-extrabold text-indigo-700 dark:text-indigo-300">
+                            {user.points} <span className="text-xs font-semibold text-indigo-500 dark:text-indigo-400 uppercase">pts</span>
                           </span>
                         </div>
                       </div>

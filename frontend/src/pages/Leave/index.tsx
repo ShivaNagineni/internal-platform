@@ -52,16 +52,16 @@ class LeaveErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-rose-100 flex items-center justify-center">
-            <CalendarOff className="w-8 h-8 text-rose-500" />
+          <div className="w-16 h-16 rounded-2xl bg-rose-100 dark:bg-rose-950/80 flex items-center justify-center">
+            <CalendarOff className="w-8 h-8 text-rose-500 dark:text-rose-400" />
           </div>
           <div>
-            <p className="text-base font-semibold text-slate-800">Something went wrong</p>
-            <p className="text-sm text-slate-500 mt-1 max-w-xs">{this.state.message}</p>
+            <p className="text-base font-semibold text-slate-800 dark:text-slate-200">Something went wrong</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xs">{this.state.message}</p>
           </div>
           <button
             onClick={() => this.setState({ hasError: false, message: "" })}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors duration-150"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/80 rounded-lg transition-colors duration-150"
           >
             <RefreshCw className="w-4 h-4" />
             Try again
@@ -97,27 +97,27 @@ const LEAVE_TYPE_LABELS: Record<LeaveType, string> = {
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-pulse">
-      <div className="h-1 bg-slate-200 w-full" />
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-pulse">
+      <div className="h-1 bg-slate-200 dark:bg-slate-800 w-full" />
       <div className="p-4 space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-slate-200 flex-shrink-0" />
+          <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex-shrink-0" />
           <div className="flex-1 space-y-2">
-            <div className="h-3 bg-slate-200 rounded w-3/5" />
-            <div className="h-2.5 bg-slate-100 rounded w-2/5" />
+            <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/5" />
+            <div className="h-2.5 bg-slate-100 dark:bg-slate-800/50 rounded w-2/5" />
           </div>
-          <div className="h-5 w-16 bg-slate-200 rounded-full" />
+          <div className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
         </div>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-200 flex-shrink-0" />
+          <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800 flex-shrink-0" />
           <div className="flex-1 space-y-1.5">
-            <div className="h-3 bg-slate-200 rounded w-2/5" />
-            <div className="h-2.5 bg-slate-100 rounded w-3/5" />
+            <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/5" />
+            <div className="h-2.5 bg-slate-100 dark:bg-slate-800/50 rounded w-3/5" />
           </div>
         </div>
-        <div className="bg-slate-100 rounded-lg px-3 py-2.5 space-y-1.5">
-          <div className="h-2.5 bg-slate-200 rounded w-full" />
-          <div className="h-2.5 bg-slate-200 rounded w-4/5" />
+        <div className="bg-slate-100 dark:bg-slate-800/50 rounded-lg px-3 py-2.5 space-y-1.5">
+          <div className="h-2.5 bg-slate-200 dark:bg-slate-800 rounded w-full" />
+          <div className="h-2.5 bg-slate-200 dark:bg-slate-800 rounded w-4/5" />
         </div>
       </div>
     </div>
@@ -130,12 +130,12 @@ function WhoIsOutPanel() {
   const { data, isLoading, isError } = useWhoIsOut();
 
   return (
-    <aside className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-4 pt-4 pb-3 border-b border-slate-100 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-rose-100 flex items-center justify-center flex-shrink-0">
-          <Users className="w-3.5 h-3.5 text-rose-600" />
+    <aside className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/80 flex items-center justify-center flex-shrink-0">
+          <Users className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
         </div>
-        <h2 className="text-sm font-semibold text-slate-800">Who's Out Today</h2>
+        <h2 className="text-sm font-semibold text-slate-800 dark:text-white">Who's Out Today</h2>
       </div>
 
       <div className="p-3 space-y-2">
@@ -143,10 +143,10 @@ function WhoIsOutPanel() {
           <>
             {[0, 1, 2].map((i) => (
               <div key={i} className="flex items-center gap-2.5 px-2 py-2 animate-pulse">
-                <div className="w-7 h-7 rounded-full bg-slate-200 flex-shrink-0" />
+                <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 flex-shrink-0" />
                 <div className="flex-1 space-y-1">
-                  <div className="h-2.5 bg-slate-200 rounded w-3/5" />
-                  <div className="h-2 bg-slate-100 rounded w-2/5" />
+                  <div className="h-2.5 bg-slate-200 dark:bg-slate-800 rounded w-3/5" />
+                  <div className="h-2 bg-slate-100 dark:bg-slate-800/50 rounded w-2/5" />
                 </div>
               </div>
             ))}
@@ -154,7 +154,7 @@ function WhoIsOutPanel() {
         )}
 
         {isError && (
-          <p className="text-xs text-slate-500 px-2 py-3 text-center">
+          <p className="text-xs text-slate-500 dark:text-slate-400 px-2 py-3 text-center">
             Unable to load. Try refreshing.
           </p>
         )}
@@ -162,8 +162,8 @@ function WhoIsOutPanel() {
         {!isLoading && !isError && data?.length === 0 && (
           <div className="text-center py-6 px-3">
             <div className="text-2xl mb-1">🏢</div>
-            <p className="text-xs font-medium text-slate-700">Everyone's in!</p>
-            <p className="text-xs text-slate-400 mt-0.5">No one is out today.</p>
+            <p className="text-xs font-medium text-slate-700 dark:text-slate-300">Everyone's in!</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">No one is out today.</p>
           </div>
         )}
 
@@ -183,22 +183,22 @@ function WhoIsOutPanel() {
             return (
               <div
                 key={`${entry.user.id}-${entry.leave_type}-${entry.start_date}`}
-                className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-slate-50 transition-colors duration-150"
+                className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150"
               >
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center flex-shrink-0 shadow-sm">
                   <span className="text-white text-[9px] font-bold leading-none">{initials}</span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-medium text-slate-800 truncate leading-tight">
+                  <p className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate leading-tight">
                     {entry.user.display_name}
                   </p>
                   <div className="flex items-center gap-1 mt-0.5">
-                    <TypeIcon className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                    <p className="text-[10px] text-slate-500 truncate">
+                    <TypeIcon className="w-3 h-3 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                       {LEAVE_TYPE_LABELS[entry.leave_type]}
                     </p>
-                    <span className="text-slate-300 flex-shrink-0">·</span>
-                    <p className="text-[10px] text-slate-400 truncate">
+                    <span className="text-slate-300 dark:text-slate-600 flex-shrink-0">·</span>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
                       until {format(parseISO(entry.end_date), "MMM d")}
                     </p>
                   </div>
@@ -256,25 +256,25 @@ function StatsStrip({ leaves, currentUserId, currentUserEmail }: StatsStripProps
       label: "Pending Review",
       value: pending,
       icon: Clock,
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-600",
-      valueColor: "text-amber-700",
+      iconBg: "bg-amber-100 dark:bg-amber-950/80",
+      iconColor: "text-amber-600 dark:text-amber-400",
+      valueColor: "text-amber-700 dark:text-amber-300",
     },
     {
       label: "Approved This Month",
       value: approvedThisMonth,
       icon: CheckCircle2,
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-600",
-      valueColor: "text-emerald-700",
+      iconBg: "bg-emerald-100 dark:bg-emerald-950/80",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      valueColor: "text-emerald-700 dark:text-emerald-300",
     },
     {
       label: "Days Remaining",
       value: daysRemaining,
       icon: CalendarCheck2,
-      iconBg: "bg-indigo-100",
-      iconColor: "text-indigo-600",
-      valueColor: "text-indigo-700",
+      iconBg: "bg-indigo-100 dark:bg-indigo-950/80",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      valueColor: "text-indigo-700 dark:text-indigo-300",
     },
   ];
 
@@ -283,14 +283,14 @@ function StatsStrip({ leaves, currentUserId, currentUserEmail }: StatsStripProps
       {stats.map(({ label, value, icon: Icon, iconBg, iconColor, valueColor }) => (
         <div
           key={label}
-          className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3.5 flex items-center gap-3"
+          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm px-4 py-3.5 flex items-center gap-3"
         >
           <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0", iconBg)}>
             <Icon className={cn("w-[18px] h-[18px]", iconColor)} />
           </div>
           <div className="min-w-0">
             <p className={cn("text-xl font-bold leading-none", valueColor)}>{value}</p>
-            <p className="text-xs text-slate-500 mt-1 leading-tight">{label}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-tight">{label}</p>
           </div>
         </div>
       ))}
@@ -338,12 +338,12 @@ function EmptyState({ filter, onRequestLeave }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center col-span-full">
       <span className="text-5xl mb-4">{config.emoji}</span>
-      <p className="text-base font-semibold text-slate-800">{config.title}</p>
-      <p className="text-sm text-slate-500 mt-1 max-w-xs">{config.body}</p>
+      <p className="text-base font-semibold text-slate-800 dark:text-slate-200">{config.title}</p>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xs">{config.body}</p>
       {filter === "ALL" && (
         <button
           onClick={onRequestLeave}
-          className="mt-5 inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors duration-150 shadow-sm shadow-indigo-200"
+          className="mt-5 inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors duration-150 shadow-sm shadow-indigo-200 dark:shadow-none"
         >
           <Plus className="w-4 h-4" />
           Request Leave
@@ -441,14 +441,14 @@ export default function LeavePage() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Leave Tracker</h1>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Leave Tracker</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               Manage and review leave requests across your team.
             </p>
           </div>
           <button
             onClick={() => setRequestOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all duration-150 shadow-sm shadow-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1"
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all duration-150 shadow-sm shadow-indigo-200 dark:shadow-none focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-1"
           >
             <Plus className="w-4 h-4" />
             Request Leave
@@ -466,12 +466,12 @@ export default function LeavePage() {
         {isLoading && (
           <div className="grid grid-cols-3 gap-3">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3.5 animate-pulse">
+              <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm px-4 py-3.5 animate-pulse">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-slate-200 flex-shrink-0" />
+                  <div className="w-9 h-9 rounded-lg bg-slate-200 dark:bg-slate-800 flex-shrink-0" />
                   <div className="space-y-2 flex-1">
-                    <div className="h-5 bg-slate-200 rounded w-1/3" />
-                    <div className="h-2.5 bg-slate-100 rounded w-3/4" />
+                    <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
+                    <div className="h-2.5 bg-slate-100 dark:bg-slate-800/50 rounded w-3/4" />
                   </div>
                 </div>
               </div>
@@ -484,7 +484,7 @@ export default function LeavePage() {
           {/* Left column: tabs + cards */}
           <div className="flex-1 min-w-0 space-y-4">
             {/* ── Filter tabs ── */}
-            <div className="flex items-center gap-1 bg-white rounded-xl border border-slate-200 shadow-sm p-1 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center gap-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-1 overflow-x-auto scrollbar-hide">
               {FILTER_TABS.map(({ key, label }) => {
                 const count = tabCounts[key] ?? 0;
                 const isActive = activeFilter === key;
@@ -496,7 +496,7 @@ export default function LeavePage() {
                       "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-indigo-400",
                       isActive
                         ? "bg-indigo-600 text-white shadow-sm"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white",
                     )}
                   >
                     {label}
@@ -506,7 +506,7 @@ export default function LeavePage() {
                           "inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1",
                           isActive
                             ? "bg-white/20 text-white"
-                            : "bg-slate-200 text-slate-600",
+                            : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
                         )}
                       >
                         {count}
@@ -520,18 +520,18 @@ export default function LeavePage() {
             {/* ── Error state ── */}
             {isError && (
               <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-rose-100 flex items-center justify-center">
-                  <CalendarOff className="w-7 h-7 text-rose-500" />
+                <div className="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-950/80 flex items-center justify-center">
+                  <CalendarOff className="w-7 h-7 text-rose-500 dark:text-rose-400" />
                 </div>
                 <div>
-                  <p className="text-base font-semibold text-slate-800">Failed to load leaves</p>
-                  <p className="text-sm text-slate-500 mt-0.5">
+                  <p className="text-base font-semibold text-slate-800 dark:text-slate-200">Failed to load leaves</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                     Something went wrong while fetching leave requests.
                   </p>
                 </div>
                 <button
                   onClick={() => refetch()}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors duration-150"
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/80 rounded-lg transition-colors duration-150"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Retry

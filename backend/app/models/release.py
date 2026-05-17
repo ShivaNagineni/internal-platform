@@ -29,9 +29,10 @@ class Release(Document):
     status: ReleaseStatus = ReleaseStatus.PLANNED
     status_history: list[ReleaseStatusEntry] = Field(default_factory=list)
     owner_id: Optional[uuid.UUID] = None
+    repository_ids: list[uuid.UUID] = Field(default_factory=list)
     changelog: Optional[str] = None
-    pr_number: Optional[int] = None
-    main_pr_number: Optional[int] = None
+    pr_numbers: dict[str, int] = Field(default_factory=dict)
+    main_pr_numbers: dict[str, int] = Field(default_factory=dict)
     slack_ts: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

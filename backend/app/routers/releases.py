@@ -8,8 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status, Background
 from app.core.auth import get_current_user
 from app.core.security import require_admin, require_manager
 from app.models.release import Release, ReleaseStatus, ReleaseStatusEntry
+from app.models.repository import Repository
 from app.models.user import User, UserRole
 from app.schemas.release import ReleaseCreate, ReleaseOut, ReleaseOwnerOut, ReleaseUpdate
+from app.schemas.repository import RepositoryOut
 from app.services.release_service import check_version_unique, validate_version
 from app.services.state_machine import RELEASE_TRANSITIONS, validate_transition
 
@@ -18,6 +20,21 @@ router = APIRouter(prefix="/releases", tags=["releases"])
 
 async def _release_to_out(release: Release) -> ReleaseOut:
     owner = await User.get(release.owner_id) if release.owner_id else None
+    
+    repositories = []
+    if release.repository_ids:
+        for repo_id in release.repository_ids:
+            repo = await Repository.get(repo_id)
+            if repo:
+                repositories.append(RepositoryOut(
+                    id=repo.id,
+                    name=repo.name,
+                    github_repo=repo.github_repo,
+                    dev_branch=repo.dev_branch,
+                    qa_branch=repo.qa_branch,
+                    main_branch=repo.main_branch,
+                    created_at=repo.created_at,
+                ))
     hist = release.status_history
     if not hist:
         hist = [ReleaseStatusEntry(status=release.status, changed_at=release.created_at)]
@@ -35,6 +52,8 @@ async def _release_to_out(release: Release) -> ReleaseOut:
             display_name=owner.display_name,
             email=owner.email,
         ) if owner else None,
+        repository_ids=release.repository_ids,
+        repositories=repositories,
         changelog=release.changelog,
         created_at=release.created_at,
         updated_at=release.updated_at,
@@ -75,6 +94,18 @@ async def create_release(
     validate_version(payload.version)
     await check_version_unique(payload.version)
 
+    repositories: list[Repository] = []
+    if payload.repository_ids:
+        for repo_id in payload.repository_ids:
+            repo = await Repository.get(repo_id)
+            if repo:
+                repositories.append(repo)
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Repository not found: {repo_id}",
+                )
+
     now = datetime.now(UTC)
     release = Release(
         title=payload.title,
@@ -82,21 +113,29 @@ async def create_release(
         description=payload.description,
         release_date=payload.release_date,
         owner_id=current_user.id,
+        repository_ids=[r.id for r in repositories],
         status=ReleaseStatus.PLANNED,
         status_history=[ReleaseStatusEntry(status=ReleaseStatus.PLANNED, changed_at=now)],
+        pr_numbers={},
+        main_pr_numbers={},
     )
     await release.insert()
 
-    # Auto-create dev→qa PR so the release is tracked on GitHub from day one
     from app.services.github_api import create_dev_to_qa_pr
-    pr_result = await create_dev_to_qa_pr(
-        version=payload.version,
-        title=payload.title,
-        description=payload.description,
-    )
-    if pr_result:
-        release.pr_number = pr_result["pr_number"]
-        await release.save()
+    
+    for repo in repositories:
+        pr_result = await create_dev_to_qa_pr(
+            version=payload.version,
+            title=payload.title,
+            description=payload.description,
+            github_repo=repo.github_repo,
+            dev_branch=repo.dev_branch,
+            qa_branch=repo.qa_branch,
+        )
+        if pr_result:
+            release.pr_numbers[str(repo.id)] = pr_result["pr_number"]
+            
+    await release.save()
 
     from app.services.notification_service import notify_release_status_change
     background_tasks.add_task(notify_release_status_change, str(release.id))
@@ -149,6 +188,17 @@ async def update_release(
         release.release_date = payload.release_date
     if payload.changelog is not None:
         release.changelog = payload.changelog
+    if payload.repository_ids is not None:
+        new_repos = []
+        for repo_id in payload.repository_ids:
+            repo = await Repository.get(repo_id)
+            if not repo:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Repository not found: {repo_id}",
+                )
+            new_repos.append(repo.id)
+        release.repository_ids = new_repos
 
     status_changed = False
     if payload.status is not None and payload.status != release.status:
@@ -170,6 +220,16 @@ async def update_release(
     return await _release_to_out(release)
 
 
+async def _resolve_release_repos(release: Release) -> list[Repository]:
+    repos = []
+    if release.repository_ids:
+        for repo_id in release.repository_ids:
+            repo = await Repository.get(repo_id)
+            if repo:
+                repos.append(repo)
+    return repos
+
+
 # ---------------------------------------------------------------------------
 # POST /releases/{id}/deploy  — approve deployment (merges dev→qa PR)
 # ---------------------------------------------------------------------------
@@ -185,16 +245,22 @@ async def deploy_release(
     if release.status != ReleaseStatus.PLANNED:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Release must be PLANNED to approve deployment")
 
-    if release.pr_number:
+    if release.pr_numbers:
         from app.services.github_api import merge_pr
-        from app.core.config import get_settings as _settings
-        repos = _settings().get_github_repos()
-        merged = any([await merge_pr(repo, release.pr_number) for repo in repos])
-        if not merged:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Could not merge the PR — check GitHub logs")
-        # Status advances to STAGING via GitHub webhook after the merge fires
+        repositories = await _resolve_release_repos(release)
+        
+        all_merged = True
+        
+        for repo in repositories:
+            pr_num = release.pr_numbers.get(str(repo.id))
+            if pr_num:
+                merged = await merge_pr(pr_num, github_repo=repo.github_repo)
+                if not merged:
+                    all_merged = False
+                    
+        if not all_merged and repositories:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Could not merge all PRs — check GitHub logs")
     else:
-        # Manually created release — advance to STAGING directly
         now = datetime.now(UTC)
         release.status = ReleaseStatus.STAGING
         release.updated_at = now
@@ -223,13 +289,20 @@ async def approve_release(
     if release.status not in {ReleaseStatus.STAGING, ReleaseStatus.IN_PROGRESS}:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Release must be STAGING or IN_PROGRESS to approve")
 
-    if release.main_pr_number:
+    if release.main_pr_numbers:
         from app.services.github_api import merge_pr
-        from app.core.config import get_settings as _settings
-        repos = _settings().get_github_repos()
-        merged = any([await merge_pr(repo, release.main_pr_number) for repo in repos])
-        if not merged:
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Could not merge the PR — check GitHub logs")
+        repositories = await _resolve_release_repos(release)
+        
+        all_merged = True
+        for repo in repositories:
+            pr_num = release.main_pr_numbers.get(str(repo.id))
+            if pr_num:
+                merged = await merge_pr(pr_num, github_repo=repo.github_repo)
+                if not merged:
+                    all_merged = False
+                    
+        if not all_merged and repositories:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Could not merge all PRs — check GitHub logs")
     else:
         now = datetime.now(UTC)
         release.status = ReleaseStatus.RELEASED

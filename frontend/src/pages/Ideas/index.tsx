@@ -61,12 +61,12 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon, accent, valueColor }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex items-center gap-4">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm p-4 flex items-center gap-4">
       <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", accent)}>
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-slate-500 font-medium truncate">{label}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">{label}</p>
         <p className={cn("text-2xl font-bold leading-tight mt-0.5", valueColor)}>{value}</p>
       </div>
     </div>
@@ -96,8 +96,8 @@ function SimpleSelect<T extends string>({
     <Select.Root value={value} onValueChange={(v) => onChange(v as T)}>
       <Select.Trigger
         className={cn(
-          "inline-flex items-center gap-2 text-sm border border-slate-200 bg-white rounded-xl px-3 py-2 text-slate-700",
-          "hover:border-slate-300 transition-colors duration-150",
+          "inline-flex items-center gap-2 text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200",
+          "hover:border-slate-300 dark:hover:border-slate-600 transition-colors duration-150",
           "focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400",
           "whitespace-nowrap",
           className
@@ -115,7 +115,7 @@ function SimpleSelect<T extends string>({
         <Select.Content
           position="popper"
           sideOffset={4}
-          className="z-50 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden min-w-[160px]"
+          className="z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg overflow-hidden min-w-[160px]"
         >
           <Select.Viewport className="p-1">
             {options.map((opt) => (
@@ -123,15 +123,15 @@ function SimpleSelect<T extends string>({
                 key={opt.value}
                 value={opt.value}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 text-sm text-slate-700 rounded-lg cursor-pointer outline-none",
-                  "data-[highlighted]:bg-indigo-50 data-[highlighted]:text-indigo-700",
+                  "flex items-center gap-2 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer outline-none",
+                  "data-[highlighted]:bg-indigo-50 dark:data-[highlighted]:bg-indigo-950/50 data-[highlighted]:text-indigo-700 dark:data-[highlighted]:text-indigo-300",
                   "data-[state=checked]:font-medium"
                 )}
               >
                 {opt.emoji && <span>{opt.emoji}</span>}
                 <Select.ItemText>{opt.label}</Select.ItemText>
                 <Select.ItemIndicator className="ml-auto">
-                  <Check className="w-4 h-4 text-indigo-600" />
+                  <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 </Select.ItemIndicator>
               </Select.Item>
             ))}
@@ -229,7 +229,7 @@ export default function IdeasPage() {
             <Lightbulb className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900 leading-tight">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
               Innovation Hub
             </h1>
             <p className="text-xs text-slate-400 mt-0.5">
@@ -241,7 +241,7 @@ export default function IdeasPage() {
         <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={() => setLeaderboardOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-sm font-bold rounded-xl transition-colors duration-150 shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 text-sm font-bold rounded-xl transition-colors duration-150 shadow-sm"
           >
             <Trophy className="w-4 h-4 text-amber-500" />
             Leaderboard & Scoring
@@ -262,37 +262,37 @@ export default function IdeasPage() {
         <StatCard
           label="Total Ideas"
           value={totalIdeas}
-          icon={<Lightbulb className="w-5 h-5 text-indigo-600" />}
-          accent="bg-indigo-50"
-          valueColor="text-indigo-700"
+          icon={<Lightbulb className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
+          accent="bg-indigo-50 dark:bg-indigo-950/80"
+          valueColor="text-indigo-700 dark:text-indigo-300"
         />
         <StatCard
           label="Under Review"
           value={underReview}
-          icon={<Clock className="w-5 h-5 text-amber-600" />}
-          accent="bg-amber-50"
-          valueColor="text-amber-700"
+          icon={<Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
+          accent="bg-amber-50 dark:bg-amber-950/80"
+          valueColor="text-amber-700 dark:text-amber-300"
         />
         <StatCard
           label="Implemented"
           value={implemented}
-          icon={<Rocket className="w-5 h-5 text-emerald-600" />}
-          accent="bg-emerald-50"
-          valueColor="text-emerald-700"
+          icon={<Rocket className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
+          accent="bg-emerald-50 dark:bg-emerald-950/80"
+          valueColor="text-emerald-700 dark:text-emerald-300"
         />
       </div>
 
       {/* ─── Toolbar: view toggle + filters ─── */}
       <div className="flex flex-wrap items-center gap-3">
         {/* View toggle */}
-        <div className="inline-flex items-center bg-slate-100 rounded-xl p-1 gap-0.5">
+        <div className="inline-flex items-center bg-slate-100 dark:bg-slate-800/80 rounded-xl p-1 gap-0.5">
           <button
             onClick={() => setView("board")}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
               view === "board"
-                ? "bg-white text-slate-800 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             )}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -303,8 +303,8 @@ export default function IdeasPage() {
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
               view === "list"
-                ? "bg-white text-slate-800 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             )}
           >
             <List className="w-3.5 h-3.5" />
@@ -321,9 +321,9 @@ export default function IdeasPage() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search ideas..."
             className={cn(
-              "w-full pl-9 pr-3 py-2 text-sm border border-slate-200 bg-white rounded-xl text-slate-700 placeholder-slate-400",
+              "w-full pl-9 pr-3 py-2 text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500",
               "focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400",
-              "hover:border-slate-300 transition-colors duration-150"
+              "hover:border-slate-300 dark:hover:border-slate-600 transition-colors duration-150"
             )}
           />
         </div>
@@ -338,17 +338,15 @@ export default function IdeasPage() {
           />
         </div>
 
-        {/* Status filter — only in list view */}
-        {view === "list" && (
-          <SimpleSelect
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={STATUS_OPTIONS}
-          />
-        )}
+        {/* Status filter */}
+        <SimpleSelect
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={STATUS_OPTIONS}
+        />
 
         {/* Results count */}
-        {(search || categoryFilter !== "ALL" || (view === "list" && statusFilter !== "ALL")) && (
+        {(search || categoryFilter !== "ALL" || statusFilter !== "ALL") && (
           <span className="text-xs text-slate-400 ml-auto">
             {filteredIdeas.length} result{filteredIdeas.length !== 1 ? "s" : ""}
           </span>
@@ -393,6 +391,7 @@ export default function IdeasPage() {
             isVotePending={isVotePending}
             onStatusChange={handleStatusChange}
             onCardClick={handleCardClick}
+            statusFilter={statusFilter}
           />
         </div>
       )}
@@ -402,11 +401,11 @@ export default function IdeasPage() {
         <div>
           {filteredIdeas.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
-                <TrendingUp className="w-8 h-8 text-slate-300" />
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <TrendingUp className="w-8 h-8 text-slate-300 dark:text-slate-600" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-slate-600">No ideas found</p>
+                <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">No ideas found</p>
                 <p className="text-xs text-slate-400 mt-1">
                   {search || categoryFilter !== "ALL" || statusFilter !== "ALL"
                     ? "Try adjusting your filters"

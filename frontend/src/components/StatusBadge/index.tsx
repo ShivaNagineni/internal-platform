@@ -14,53 +14,53 @@ interface BadgeStyle {
 
 const STATUS_STYLES: Record<string, BadgeStyle> = {
   PENDING: {
-    container: "bg-amber-100 text-amber-700 border-amber-200",
+    container: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800",
     dot: "bg-amber-500",
   },
   APPROVED: {
-    container: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    container: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800",
     dot: "bg-emerald-500",
   },
   RELEASED: {
-    container: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    container: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800",
     dot: "bg-emerald-500",
   },
   IMPLEMENTED: {
-    container: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    container: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800",
     dot: "bg-emerald-500",
   },
   REJECTED: {
-    container: "bg-rose-100 text-rose-700 border-rose-200",
+    container: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800",
     dot: "bg-rose-500",
   },
   CANCELLED: {
-    container: "bg-rose-100 text-rose-700 border-rose-200",
+    container: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800",
     dot: "bg-rose-500",
   },
   UNDER_REVIEW: {
-    container: "bg-blue-100 text-blue-700 border-blue-200",
+    container: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800",
     dot: "bg-blue-500",
   },
   IN_PROGRESS: {
-    container: "bg-indigo-100 text-indigo-700 border-indigo-200",
+    container: "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/80 dark:text-indigo-300 dark:border-indigo-800",
     dot: "bg-indigo-500",
   },
   STAGING: {
-    container: "bg-purple-100 text-purple-700 border-purple-200",
+    container: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950/80 dark:text-purple-300 dark:border-purple-800",
     dot: "bg-purple-500",
   },
   PLANNED: {
-    container: "bg-slate-100 text-slate-700 border-slate-200",
+    container: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
     dot: "bg-slate-400",
   },
   SUBMITTED: {
-    container: "bg-sky-100 text-sky-700 border-sky-200",
+    container: "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950/80 dark:text-sky-300 dark:border-sky-800",
     dot: "bg-sky-500",
   },
 };
 
 const FALLBACK_STYLE: BadgeStyle = {
-  container: "bg-slate-100 text-slate-700 border-slate-200",
+  container: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
   dot: "bg-slate-400",
 };
 

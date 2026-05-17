@@ -22,11 +22,12 @@ async def get_dashboard_stats(
 
     pending_leaves = await Leave.find(Leave.status == LeaveStatus.PENDING).count()
 
-    approved_leaves_today = await Leave.find(
+    approved_leaves_today_list = await Leave.find(
         Leave.status == LeaveStatus.APPROVED,
         Leave.start_date <= today,
         Leave.end_date >= today,
-    ).count()
+    ).to_list()
+    approved_leaves_today = len(set(l.user_id for l in approved_leaves_today_list))
 
     total_ideas = await Idea.find().count()
 

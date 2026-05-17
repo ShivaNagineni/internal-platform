@@ -2,11 +2,13 @@ export type UserRole = "EMPLOYEE" | "MANAGER" | "ADMIN" | "OWNER";
 
 export interface User {
   id: string;
-  azure_oid: string;
+  azure_oid: string | null;
+  zoho_uid: string | null;
   email: string;
   display_name: string;
   department: string | null;
   role: UserRole;
+  theme: "light" | "dark";
   points: number;
   is_active: boolean;
   created_at: string;
@@ -69,7 +71,7 @@ export type IdeaCategory = "PRODUCT" | "PROCESS" | "TECH" | "CULTURE" | "OTHER";
 
 export interface IdeaAuthor {
   id: string;
-  azure_oid: string;
+  azure_oid: string | null;
   display_name: string;
   email: string;
   department: string | null;
@@ -115,6 +117,16 @@ export interface ReleaseOwner {
   email: string;
 }
 
+export interface Repository {
+  id: string;
+  name: string;
+  github_repo: string;
+  dev_branch: string;
+  qa_branch: string;
+  main_branch: string;
+  created_at: string;
+}
+
 export interface Release {
   id: string;
   title: string;
@@ -125,6 +137,8 @@ export interface Release {
   status_history: ReleaseStatusEntry[];
   owner_id: string | null;
   owner: ReleaseOwner | null;
+  repository_ids?: string[];
+  repositories?: Repository[];
   changelog: string | null;
   created_at: string;
   updated_at: string;
@@ -135,6 +149,7 @@ export interface ReleaseCreate {
   version: string;
   description?: string;
   release_date: string;
+  repository_ids?: string[];
 }
 
 export interface ReleaseUpdate {
@@ -143,6 +158,17 @@ export interface ReleaseUpdate {
   release_date?: string;
   status?: ReleaseStatus;
   changelog?: string;
+  repository_ids?: string[];
+}
+
+export type LocationType = "ONSHORE" | "OFFSHORE";
+
+export interface Department {
+  id: string;
+  name: string;
+  description: string | null;
+  location: LocationType;
+  created_at: string;
 }
 
 export interface DashboardStats {
