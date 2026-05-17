@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Environment files (never commit real secrets)
+.env
+backend/.env
+frontend/.env
+**/.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Build output
+dist/
+build/
+*.egg-info/
+
+# IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Logs
+*.log

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Write",
+      "Edit",
+      "Read",
+      "Bash(mkdir *)",
+      "Bash(find *)",
+      "Bash(ls *)"
+    ],
+    "defaultMode": "acceptEdits"
+  }
+}
