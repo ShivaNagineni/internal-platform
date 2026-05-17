@@ -16,7 +16,8 @@ class UserRole(str, Enum):
 
 class User(Document):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
-    azure_oid: str
+    azure_oid: Optional[str] = None
+    zoho_uid: Optional[str] = None
     email: str
     display_name: str
     department: Optional[str] = None
@@ -28,6 +29,7 @@ class User(Document):
     class Settings:
         name = "users"
         indexes = [
-            IndexModel([("azure_oid", ASCENDING)], unique=True),
+            IndexModel([("azure_oid", ASCENDING)], unique=True, sparse=True),
+            IndexModel([("zoho_uid", ASCENDING)], unique=True, sparse=True),
             IndexModel([("email", ASCENDING)], unique=True),
         ]

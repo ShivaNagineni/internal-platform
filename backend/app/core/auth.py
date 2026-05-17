@@ -14,6 +14,17 @@ _jwks_cache: dict = {"keys": [], "fetched_at": 0.0}
 _JWKS_TTL = 86400.0
 
 
+def _validate_zoho_jwt(token: str) -> dict:
+    """Validate a JWT we issued for a Zoho-authenticated user."""
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+        if payload.get("provider") != "zoho":
+            raise ValueError("not a zoho token")
+        return payload
+    except (JWTError, ValueError):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+
 async def _get_jwks() -> list[dict]:
     now = time.time()
     if now - _jwks_cache["fetched_at"] < _JWKS_TTL and _jwks_cache["keys"]:
@@ -73,7 +84,24 @@ async def get_current_user(
 ):
     from app.models.user import User, UserRole
 
-    payload = await _validate_token(credentials.credentials)
+    token = credentials.credentials
+
+    # ── Zoho JWT (issued by this backend after Zoho OAuth) ────────────────────
+    try:
+        payload = _validate_zoho_jwt(token)
+        user = await User.find_one(User.zoho_uid == payload["sub"])
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        if not user.is_active:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account deactivated")
+        return user
+    except HTTPException as exc:
+        if exc.status_code == 403:
+            raise
+        # Not a Zoho token — fall through to Azure AD validation
+
+    # ── Azure AD token ────────────────────────────────────────────────────────
+    payload = await _validate_token(token)
 
     azure_oid = payload.get("oid")
     email = payload.get("preferred_username") or payload.get("email") or payload.get("upn") or payload.get("unique_name", "")
@@ -100,7 +128,6 @@ async def get_current_user(
     else:
         user.email = email
         user.display_name = display_name
-        # Only update role if DB role is not OWNER (to preserve seeded OWNER status)
         if user.role != UserRole.OWNER or role == UserRole.OWNER:
             user.role = role
         user.updated_at = datetime.now(UTC)

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMsal, useAccount } from "@azure/msal-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { getZohoUser, clearZohoSession, isZohoAuthenticated } from "@/lib/zohoAuth";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -56,15 +57,21 @@ export default function Layout({ children }: LayoutProps) {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  const displayName: string = account?.name ?? "User";
-  const email: string = account?.username ?? "";
+  const zohoUser = isZohoAuthenticated() ? getZohoUser() : null;
+  const displayName: string = zohoUser?.display_name ?? account?.name ?? "User";
+  const email: string = zohoUser?.email ?? account?.username ?? "";
   const initials: string = getInitials(displayName);
   const pageTitle: string = getPageTitle(location.pathname);
 
   function handleSignOut(): void {
-    instance.logoutPopup({
-      postLogoutRedirectUri: window.location.origin,
-    }).catch(console.error);
+    if (zohoUser) {
+      clearZohoSession();
+      window.location.href = "/";
+    } else {
+      instance.logoutPopup({
+        postLogoutRedirectUri: window.location.origin,
+      }).catch(console.error);
+    }
   }
 
   return (
