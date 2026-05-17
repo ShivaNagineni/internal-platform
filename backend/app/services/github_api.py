@@ -141,9 +141,10 @@ async def create_qa_to_main_pr(
             if main_branch:
                 resolved_main = next((b for b in branches if b == main_branch), None) \
                     or next((b for b in branches if b.lower() == main_branch.lower()), None) \
-                    or "main"
+                    or main_branch  # pass configured value through; GitHub will reject if wrong
             else:
-                resolved_main = next((b for b in branches if b.lower() in ("main", "master")), "main")
+                resolved_main = next((b for b in branches if b.lower() in ("main", "master")), None) \
+                    or "main"
 
             if not resolved_qa:
                 logger.warning("No 'qa' branch found in %s (branches: %s) — skipping", repo, branches)
