@@ -375,6 +375,10 @@ async def _handle_block_action(payload: dict) -> None:
             if action_id == "release_start":
                 if release.status != ReleaseStatus.PLANNED:
                     print(f"[SLACK ACTION] Release {release_id_str} not in PLANNED ({release.status.value})")
+                    response_url = payload.get("response_url")
+                    if response_url:
+                        async with httpx.AsyncClient() as c:
+                            await c.post(response_url, json={"replace_original": False, "text": f"⚠️ This release is already *{release.status.value}* — no action needed."})
                     return
 
                 response_url = payload.get("response_url")
@@ -419,6 +423,10 @@ async def _handle_block_action(payload: dict) -> None:
             elif action_id == "release_approve" or action_id.startswith("release_approve_"):
                 if release.status not in (ReleaseStatus.STAGING, ReleaseStatus.IN_PROGRESS):
                     print(f"[SLACK ACTION] Release {release_id_str} not in STAGING/IN_PROGRESS ({release.status.value})")
+                    response_url = payload.get("response_url")
+                    if response_url:
+                        async with httpx.AsyncClient() as c:
+                            await c.post(response_url, json={"replace_original": False, "text": f"⚠️ This release is already *{release.status.value}* — no action needed."})
                     return
 
                 response_url = payload.get("response_url")
