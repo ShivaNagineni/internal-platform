@@ -143,17 +143,36 @@ class SlackService:
             {"type": "divider"},
         ]
 
-    async def send_release_webhook(self, release, user=None) -> None:
-        url = settings.slack_webhook_url
-        if not url:
-            return
+    async def send_release_notification(self, release, user=None) -> None:
+        """Post or update the Slack message for a release, keeping a single message per release."""
         blocks = self.build_release_notification(release, user, release.status.value.title())
-        try:
-            async with httpx.AsyncClient() as client:
-                resp = await client.post(url, json={"blocks": blocks})
-                print(f"[SLACK WEBHOOK] Posted release {release.id} ({release.status.value}), status={resp.status_code}")
-        except Exception as e:
-            print(f"[SLACK WEBHOOK ERROR] send_release_webhook failed: {e}")
+        channel = settings.slack_release_channel
+
+        if channel and settings.slack_bot_token and settings.slack_bot_token != "mock":
+            if release.slack_ts and release.slack_channel:
+                await self.update_message(release.slack_channel, release.slack_ts, blocks,
+                                          text=f"Release {release.version} — {release.status.value}")
+            else:
+                ts = await self.post_message(channel, blocks,
+                                             text=f"Release {release.version} — {release.status.value}")
+                if ts:
+                    release.slack_ts = ts
+                    release.slack_channel = channel
+                    await release.save()
+        else:
+            # Fallback: incoming webhook (no update capability)
+            url = settings.slack_webhook_url
+            if not url:
+                return
+            try:
+                async with httpx.AsyncClient() as client:
+                    resp = await client.post(url, json={"blocks": blocks})
+                    print(f"[SLACK WEBHOOK] Posted release {release.id} ({release.status.value}), status={resp.status_code}")
+            except Exception as e:
+                print(f"[SLACK WEBHOOK ERROR] send_release_notification failed: {e}")
+
+    async def send_release_webhook(self, release, user=None) -> None:
+        await self.send_release_notification(release, user)
 
     def build_release_notification(self, release, user, action: str) -> list[dict]:
         status_emoji = {

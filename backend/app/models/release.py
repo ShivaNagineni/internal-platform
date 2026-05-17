@@ -34,6 +34,7 @@ class Release(Document):
     pr_numbers: dict[str, int] = Field(default_factory=dict)
     main_pr_numbers: dict[str, int] = Field(default_factory=dict)
     slack_ts: Optional[str] = None
+    slack_channel: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

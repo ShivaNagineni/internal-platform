@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     slack_bot_token: str = ""
     slack_webhook_url: str = ""
     slack_digest_channel: str = "#who-is-out"
+    slack_release_channel: str = ""
 
     secret_key: str = "change-me-in-production"
     environment: str = "development"

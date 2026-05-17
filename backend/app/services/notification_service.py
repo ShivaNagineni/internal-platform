@@ -112,7 +112,7 @@ async def notify_release_status_change(release_id: str):
     # sending a duplicate Slack notification here.
     if release.status.value != "IN_PROGRESS":
         from app.services.slack import slack_service
-        await slack_service.send_release_webhook(release, owner)
+        await slack_service.send_release_notification(release, owner)
 
     if release.status.value == "STAGING":
         from app.services.github_api import create_qa_to_main_pr
