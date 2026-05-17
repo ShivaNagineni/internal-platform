@@ -123,9 +123,11 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
   function validate(): FormErrors {
     const e: FormErrors = {};
     if (!form.title.trim()) e.title = "Title is required.";
-    const vErr = validateVersion(form.version);
-    if (vErr) e.version = vErr;
-    if (!form.release_date) e.release_date = "Release date is required.";
+    if (!isEditMode) {
+      const vErr = validateVersion(form.version);
+      if (vErr) e.version = vErr;
+      if (!form.release_date) e.release_date = "Release date is required.";
+    }
     return e;
   }
 
@@ -133,8 +135,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Mark all fields touched
-    setTouched({ title: true, version: true, release_date: true });
+    setTouched({ title: true, version: !isEditMode, release_date: !isEditMode });
 
     const errs = validate();
     if (Object.keys(errs).length > 0) {

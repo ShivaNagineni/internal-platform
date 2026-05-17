@@ -79,9 +79,7 @@ async def notify_release_status_change(release_id: str):
     if not release:
         return
 
-    user = await User.get(release.owner_id)
-    if not user:
-        return
+    owner = await User.get(release.owner_id) if release.owner_id else None
 
     approvers = await User.find({"role": {"$in": ["MANAGER", "ADMIN"]}}).to_list()
     shiva_user = await User.find_one({"email": {"$in": ["shiva.nagineni@tekyantra.com", "shiva.kumar.nagineni@gmail.com"]}})
@@ -92,23 +90,26 @@ async def notify_release_status_change(release_id: str):
     for rec in recipients:
         n = Notification(
             recipient_id=rec.id,
-            title=f"Release v{release.version} {release.status.value}",
+            title=f"Release {release.version} {release.status.value}",
             message=f"Release '{release.title}' is now {release.status.value}",
             type=NotificationType.RELEASE,
             link="/releases",
         )
         await n.insert()
 
-    if release.owner_id and not any(a.id == release.owner_id for a in recipients):
+    if release.owner_id and owner and not any(a.id == release.owner_id for a in recipients):
         n = Notification(
             recipient_id=release.owner_id,
-            title=f"Release v{release.version} {release.status.value}",
+            title=f"Release {release.version} {release.status.value}",
             message=f"Your release '{release.title}' is now {release.status.value}",
             type=NotificationType.RELEASE,
             link="/releases",
         )
         await n.insert()
 
-    if release.status.value in ("PLANNED", "STAGING"):
-        from app.services.slack import slack_service
-        await slack_service.send_release_webhook(release, user)
+    from app.services.slack import slack_service
+    await slack_service.send_release_webhook(release, owner)
+
+    if release.status.value == "STAGING":
+        from app.services.github_api import create_qa_to_main_pr
+        await create_qa_to_main_pr(release.version, release.title)
