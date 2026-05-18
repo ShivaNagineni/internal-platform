@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type { Release, ReleaseStatus, UserRole } from "@/types";
 import { cn } from "@/lib/utils";
-import { useReleases, useUpdateRelease, useDeployRelease, useApproveRelease } from "@/hooks/useReleases";
+import { useReleases, useUpdateRelease, useDeployRelease, useApproveRelease, useDeleteRelease } from "@/hooks/useReleases";
 import ReleaseCard from "@/components/Releases/ReleaseCard";
 import ReleaseDetailModal from "@/components/Releases/ReleaseDetailModal";
 import ReleaseForm from "@/components/Releases/ReleaseForm";
@@ -183,6 +183,7 @@ interface StatusRowProps {
   onStatusAdvance: (id: string, status: ReleaseStatus) => void;
   onDeploy: (id: string) => void;
   onApproveRelease: (id: string) => void;
+  onDelete: (id: string) => void;
   onClick: (release: Release) => void;
 }
 
@@ -194,6 +195,7 @@ function StatusRow({
   onStatusAdvance,
   onDeploy,
   onApproveRelease,
+  onDelete,
   onClick,
 }: StatusRowProps) {
   return (
@@ -238,6 +240,7 @@ function StatusRow({
                 onStatusAdvance={onStatusAdvance}
                 onDeploy={onDeploy}
                 onApproveRelease={onApproveRelease}
+                onDelete={onDelete}
                 onClick={onClick}
               />
             </div>
@@ -259,6 +262,7 @@ export default function ReleasesPage() {
   const updateRelease = useUpdateRelease();
   const deployRelease = useDeployRelease();
   const approveRelease = useApproveRelease();
+  const deleteRelease = useDeleteRelease();
 
   // UI state
   const [viewMode, setViewMode] = useState<ViewMode>("pipeline");
@@ -295,6 +299,10 @@ export default function ReleasesPage() {
 
   function handleApproveRelease(id: string) {
     approveRelease.mutate(id);
+  }
+
+  function handleDelete(id: string) {
+    deleteRelease.mutate(id);
   }
 
   // ─── Derived data ────────────────────────────────────────────────────────────
@@ -467,6 +475,7 @@ export default function ReleasesPage() {
                   onStatusAdvance={handleStatusChange}
                   onDeploy={handleDeploy}
                   onApproveRelease={handleApproveRelease}
+                  onDelete={handleDelete}
                   onClick={handleCardClick}
                 />
               ))}

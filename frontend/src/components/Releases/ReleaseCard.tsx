@@ -1,4 +1,4 @@
-import { Edit, ChevronRight, User } from "lucide-react";
+import { Edit, ChevronRight, User, Trash2 } from "lucide-react";
 import type { Release, ReleaseStatus, UserRole } from "@/types";
 import { cn, formatDate, getInitials } from "@/lib/utils";
 import StatusBadge from "@/components/StatusBadge";
@@ -57,6 +57,7 @@ interface Props {
   onStatusAdvance?: (id: string, status: ReleaseStatus) => void;
   onDeploy?: (id: string) => void;
   onApproveRelease?: (id: string) => void;
+  onDelete?: (id: string) => void;
   onClick: (release: Release) => void;
 }
 
@@ -69,6 +70,7 @@ export default function ReleaseCard({
   onStatusAdvance,
   onDeploy,
   onApproveRelease,
+  onDelete,
   onClick,
 }: Props) {
   const canManage = currentUserRole === "MANAGER" || currentUserRole === "ADMIN" || currentUserRole === "OWNER";
@@ -98,6 +100,13 @@ export default function ReleaseCard({
     e.stopPropagation();
     if (onStatusAdvance) {
       onStatusAdvance(release.id, "CANCELLED");
+    }
+  }
+
+  function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (onDelete && window.confirm(`Delete release v${release.version}? This cannot be undone.`)) {
+      onDelete(release.id);
     }
   }
 
@@ -259,6 +268,15 @@ export default function ReleaseCard({
                 className="ml-auto text-xs text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/80 px-2 py-1.5 rounded-lg transition-colors duration-150"
               >
                 Cancel
+              </button>
+            )}
+            {release.status === "PLANNED" && onDelete && (
+              <button
+                onClick={handleDelete}
+                className="p-1.5 text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/80 rounded-lg transition-colors duration-150"
+                title="Delete release"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
