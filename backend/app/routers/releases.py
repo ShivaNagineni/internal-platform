@@ -233,6 +233,15 @@ async def update_release(
         from app.services.notification_service import notify_release_status_change
         background_tasks.add_task(notify_release_status_change, str(release.id))
 
+        if release.status == ReleaseStatus.CANCELLED:
+            from app.services.github_api import close_pr
+            repositories = await _resolve_release_repos(release)
+            all_pr_numbers = {**release.pr_numbers, **release.main_pr_numbers}
+            for key, pr_num in all_pr_numbers.items():
+                repo = next((r for r in repositories if str(r.id) == key), None)
+                github_repo = repo.github_repo if repo else None
+                background_tasks.add_task(close_pr, pr_num, github_repo)
+
     return await _release_to_out(release)
 
 

@@ -1,6 +1,8 @@
 import { useState, useMemo, Component } from "react";
 import type { ComponentType, ErrorInfo, ReactNode } from "react";
 import { useMsal, useAccount } from "@azure/msal-react";
+import FilterSelect from "@/components/FilterSelect";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   Plus,
   CalendarOff,
@@ -18,6 +20,7 @@ import {
   LayoutList,
   CalendarRange,
   ChevronLeft,
+  RotateCcw,
   ChevronRight,
 } from "lucide-react";
 import {
@@ -227,16 +230,16 @@ function WhoIsOutPanel() {
   );
 }
 
-// ─── Filter Tabs ──────────────────────────────────────────────────────────────
+// ─── Filter ───────────────────────────────────────────────────────────────────
 
 type FilterTab = "ALL" | LeaveStatus;
 
-const FILTER_TABS: { key: FilterTab; label: string }[] = [
-  { key: "ALL", label: "All" },
-  { key: "PENDING", label: "Pending" },
-  { key: "APPROVED", label: "Approved" },
-  { key: "REJECTED", label: "Rejected" },
-  { key: "CANCELLED", label: "Cancelled" },
+const FILTER_OPTIONS: { value: FilterTab; label: string }[] = [
+  { value: "ALL", label: "All statuses" },
+  { value: "PENDING", label: "Pending" },
+  { value: "APPROVED", label: "Approved" },
+  { value: "REJECTED", label: "Rejected" },
+  { value: "CANCELLED", label: "Cancelled" },
 ];
 
 // ─── Stats Strip ─────────────────────────────────────────────────────────────
@@ -544,6 +547,7 @@ export default function LeavePage() {
     action: "approve" | "reject";
     leaveId: string;
   }>({ open: false, action: "approve", leaveId: "" });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
 
   const allLeaves: Leave[] = leaves ?? [];
 
@@ -581,9 +585,7 @@ export default function LeavePage() {
   }
 
   function handleDelete(id: string) {
-    if (window.confirm("Are you sure you want to delete this leave request?")) {
-      deleteLeave(id, { onError: (err) => console.error("Delete failed", err) });
-    }
+    setDeleteConfirm({ open: true, id });
   }
 
   function handleApprovalSuccess() {
@@ -638,43 +640,30 @@ export default function LeavePage() {
         <div className="flex gap-5 items-start">
           {/* Left column: tabs + cards */}
           <div className="flex-1 min-w-0 space-y-4">
-            {/* ── Filter tabs + view toggle ── */}
+            {/* ── Filter + view toggle ── */}
             <div className="flex items-center gap-2">
-              <div className="flex-1 flex items-center gap-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-1 overflow-x-auto scrollbar-hide min-w-0">
-                {FILTER_TABS.map(({ key, label }) => {
-                  const count = tabCounts[key] ?? 0;
-                  const isActive = activeFilter === key;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setActiveFilter(key)}
-                      className={cn(
-                        "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-indigo-400",
-                        isActive
-                          ? "bg-indigo-600 text-white shadow-sm"
-                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white",
-                      )}
-                    >
-                      {label}
-                      {count > 0 && (
-                        <span
-                          className={cn(
-                            "inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1",
-                            isActive
-                              ? "bg-white/20 text-white"
-                              : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
-                          )}
-                        >
-                          {count}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+              <FilterSelect
+                value={activeFilter}
+                onChange={setActiveFilter}
+                options={FILTER_OPTIONS.map((o) => ({
+                  ...o,
+                  label: o.value === "ALL"
+                    ? `All (${tabCounts.ALL ?? 0})`
+                    : `${o.label}${(tabCounts[o.value] ?? 0) > 0 ? ` (${tabCounts[o.value]})` : ""}`,
+                }))}
+              />
+              {activeFilter !== "ALL" && (
+                <button
+                  onClick={() => setActiveFilter("ALL")}
+                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors duration-150"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Reset
+                </button>
+              )}
 
               {/* View mode toggle */}
-              <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-1 flex-shrink-0">
+              <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-1 flex-shrink-0 ml-auto">
                 <button
                   onClick={() => setViewMode("list")}
                   title="List view"
@@ -791,6 +780,20 @@ export default function LeavePage() {
         action={approvalModal.action}
         leaveId={approvalModal.leaveId}
         onSuccess={handleApprovalSuccess}
+      />
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm((prev) => ({ ...prev, open }))}
+        variant="danger"
+        title="Delete leave request"
+        description="Are you sure you want to delete this leave request? This cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (deleteConfirm.id) {
+            deleteLeave(deleteConfirm.id, { onError: (err) => console.error("Delete failed", err) });
+          }
+        }}
       />
     </LeaveErrorBoundary>
   );
