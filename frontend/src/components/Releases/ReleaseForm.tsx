@@ -396,6 +396,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
                 <input
                   type="date"
                   value={form.release_date}
+                  min={new Date().toISOString().substring(0, 10)}
                   onChange={(e) => setField("release_date", e.target.value)}
                   onBlur={() => markTouched("release_date")}
                   className={cn(
