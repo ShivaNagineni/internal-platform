@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useMsal, useAccount } from "@azure/msal-react";
+import * as Select from "@radix-ui/react-select";
 import {
   Rocket,
   Plus,
@@ -8,8 +9,8 @@ import {
   Zap,
   Calendar,
   CheckCircle2,
-  CalendarDays,
-  X,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import {
   startOfWeek,
@@ -163,6 +164,53 @@ function useCurrentUserRole(): UserRole {
   if (upperRoles.includes("ADMIN")) return "ADMIN";
   if (upperRoles.includes("MANAGER")) return "MANAGER";
   return "EMPLOYEE";
+}
+
+// ─── Filter dropdown ──────────────────────────────────────────────────────────
+
+function FilterSelect<T extends string>({
+  value,
+  onChange,
+  options,
+  icon: Icon,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: { value: T; label: string }[];
+  icon?: React.ComponentType<{ className?: string }>;
+}) {
+  const selected = options.find((o) => o.value === value);
+  return (
+    <Select.Root value={value} onValueChange={onChange}>
+      <Select.Trigger className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 min-w-[130px]">
+        {Icon && <Icon className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />}
+        <Select.Value>{selected?.label}</Select.Value>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 ml-auto flex-shrink-0" />
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Content
+          position="popper"
+          sideOffset={4}
+          className="z-50 min-w-[160px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden animate-in fade-in-0 zoom-in-95"
+        >
+          <Select.Viewport className="p-1">
+            {options.map((opt) => (
+              <Select.Item
+                key={opt.value}
+                value={opt.value}
+                className="flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 cursor-pointer select-none hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-700 dark:hover:text-indigo-300 focus:outline-none focus:bg-indigo-50 dark:focus:bg-indigo-950/50 data-[state=checked]:text-indigo-700 dark:data-[state=checked]:text-indigo-300 data-[state=checked]:font-semibold"
+              >
+                <Select.ItemIndicator>
+                  <Check className="w-3.5 h-3.5" />
+                </Select.ItemIndicator>
+                <Select.ItemText>{opt.label}</Select.ItemText>
+              </Select.Item>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
 }
 
 // ─── Skeleton loader ──────────────────────────────────────────────────────────
@@ -463,87 +511,50 @@ export default function ReleasesPage() {
       )}
 
       {/* View toggle + filter bar */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
 
-          {/* View mode toggle */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl p-1">
-            <button
-              onClick={() => setViewMode("pipeline")}
-              className={cn(
-                "flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all duration-150",
-                viewMode === "pipeline"
-                  ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-              )}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              Pipeline
-            </button>
-            <button
-              onClick={() => setViewMode("timeline")}
-              className={cn(
-                "flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all duration-150",
-                viewMode === "timeline"
-                  ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-              )}
-            >
-              <GitBranch className="w-3.5 h-3.5" />
-              Timeline
-            </button>
-          </div>
-
-          {/* Status filter pills */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {STATUS_FILTERS.map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => setStatusFilter(value)}
-                className={cn(
-                  "text-xs font-medium px-3 py-1.5 rounded-full border transition-colors duration-150",
-                  statusFilter === value
-                    ? "bg-indigo-600 text-white border-indigo-600"
-                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+        {/* View mode toggle */}
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl p-1">
+          <button
+            onClick={() => setViewMode("pipeline")}
+            className={cn(
+              "flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all duration-150",
+              viewMode === "pipeline"
+                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+            )}
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            Pipeline
+          </button>
+          <button
+            onClick={() => setViewMode("timeline")}
+            className={cn(
+              "flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-all duration-150",
+              viewMode === "timeline"
+                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+            )}
+          >
+            <GitBranch className="w-3.5 h-3.5" />
+            Timeline
+          </button>
         </div>
 
-        {/* Date filter row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-            <CalendarDays className="w-3.5 h-3.5" />
-            <span className="font-medium">Date:</span>
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {DATE_FILTERS.map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => setDateFilter(value)}
-                className={cn(
-                  "text-xs font-medium px-3 py-1.5 rounded-full border transition-colors duration-150",
-                  dateFilter === value
-                    ? "bg-emerald-600 text-white border-emerald-600"
-                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {(statusFilter !== "ALL" || dateFilter !== "ALL") && (
-            <button
-              onClick={() => { setStatusFilter("ALL"); setDateFilter("ALL"); }}
-              className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 ml-1 transition-colors duration-150"
-            >
-              <X className="w-3 h-3" />
-              Clear filters
-            </button>
-          )}
+        {/* Filter dropdowns */}
+        <div className="flex items-center gap-2">
+          <FilterSelect
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={STATUS_FILTERS}
+            icon={Zap}
+          />
+          <FilterSelect
+            value={dateFilter}
+            onChange={setDateFilter}
+            options={DATE_FILTERS}
+            icon={Calendar}
+          />
         </div>
       </div>
 
