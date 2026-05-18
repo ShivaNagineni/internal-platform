@@ -202,6 +202,7 @@ async def create_work_item(
     description: str | None = None,
     assigned_to_email: str | None = None,
     priority: int | None = None,
+    iteration_path: str | None = None,
 ) -> dict:
     encoded_type = urllib.parse.quote(work_item_type)
     base = _project_url(project)
@@ -213,6 +214,8 @@ async def create_work_item(
         patch.append({"op": "add", "path": "/fields/System.AssignedTo", "value": assigned_to_email})
     if priority is not None:
         patch.append({"op": "add", "path": "/fields/Microsoft.VSTS.Common.Priority", "value": priority})
+    if iteration_path:
+        patch.append({"op": "add", "path": "/fields/System.IterationPath", "value": iteration_path})
 
     headers = {**_get_auth_headers(), "Content-Type": "application/json-patch+json"}
     async with httpx.AsyncClient(timeout=30) as client:

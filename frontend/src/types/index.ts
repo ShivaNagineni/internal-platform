@@ -206,6 +206,7 @@ export interface StoryCreate {
   work_item_type: WorkItemType;
   assigned_to_email?: string;
   priority?: number;
+  sprint_path?: string;
 }
 
 export interface StoryUpdate {

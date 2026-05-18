@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Loader2 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
-import type { Story, StoryCreate, StoryUpdate, User, WorkItemType } from "@/types";
+import type { Sprint, Story, StoryCreate, StoryUpdate, User, WorkItemType } from "@/types";
 
 const WORK_ITEM_TYPES: WorkItemType[] = ["User Story", "Task", "Bug"];
 
@@ -19,6 +19,7 @@ interface StoryFormModalProps {
   onOpenChange: (open: boolean) => void;
   users: User[];
   projects: string[];
+  sprints?: Sprint[];
   story?: Story | null;
   onSubmit: (data: StoryCreate | StoryUpdate) => Promise<void>;
   isLoading: boolean;
@@ -31,6 +32,7 @@ export default function StoryFormModal({
   onOpenChange,
   users,
   projects,
+  sprints = [],
   story,
   onSubmit,
   isLoading,
@@ -45,6 +47,7 @@ export default function StoryFormModal({
   const [workItemType, setWorkItemType] = useState<WorkItemType>("User Story");
   const [assigneeEmail, setAssigneeEmail] = useState("");
   const [priority, setPriority] = useState<string>("");
+  const [sprintPath, setSprintPath] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -62,6 +65,7 @@ export default function StoryFormModal({
         setWorkItemType("User Story");
         setAssigneeEmail("");
         setPriority("");
+        setSprintPath("");
       }
     }
   }, [open, story, projects]);
@@ -89,6 +93,7 @@ export default function StoryFormModal({
       if (description.trim()) payload.description = description.trim();
       if (assigneeEmail) payload.assigned_to_email = assigneeEmail;
       if (priority) payload.priority = Number(priority);
+      if (sprintPath) payload.sprint_path = sprintPath;
       await onSubmit(payload);
     }
 
@@ -229,6 +234,29 @@ export default function StoryFormModal({
                 <span className="text-xs text-slate-600 dark:text-slate-400">
                   {users.find((u) => u.email === assigneeEmail)?.display_name ?? assigneeEmail}
                 </span>
+              </div>
+            )}
+
+            {/* Sprint — only shown when creating and sprints are available */}
+            {!isEdit && sprints.filter(s => s.project === project && s.time_frame !== "past").length > 0 && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+                  Sprint
+                </label>
+                <select
+                  value={sprintPath}
+                  onChange={(e) => setSprintPath(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                >
+                  <option value="">— Backlog (no sprint) —</option>
+                  {sprints
+                    .filter(s => s.project === project && s.time_frame !== "past")
+                    .map(s => (
+                      <option key={s.id} value={s.path}>
+                        {s.name}{s.time_frame === "current" ? " (active)" : ""}
+                      </option>
+                    ))}
+                </select>
               </div>
             )}
 

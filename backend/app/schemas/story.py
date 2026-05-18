@@ -39,6 +39,7 @@ class StoryCreate(BaseModel):
     work_item_type: Literal["User Story", "Task", "Bug"] = "User Story"
     assigned_to_email: str | None = None
     priority: int | None = Field(None, ge=1, le=4)
+    sprint_path: str | None = None
 
 
 class StoryUpdate(BaseModel):

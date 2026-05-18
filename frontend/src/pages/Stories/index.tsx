@@ -1166,6 +1166,7 @@ export default function StoriesPage() {
   const qc = useQueryClient();
 
   const { data: statesMap = {} } = useStoriesStates();
+  const { data: allSprints = [] } = useSprints();
   const moveStoryToSprint = useMoveStoryToSprint();
 
   async function handleStateChange(id: number, state: string) {
@@ -1294,6 +1295,7 @@ export default function StoriesPage() {
         onOpenChange={(v) => { setFormOpen(v); if (!v) setEditingStory(null); }}
         users={users}
         projects={projects}
+        sprints={allSprints}
         story={editingStory}
         onSubmit={handleFormSubmit}
         isLoading={createStory.isPending || updateStory.isPending}
