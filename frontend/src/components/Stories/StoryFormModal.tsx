@@ -59,13 +59,17 @@ export default function StoryFormModal({
         setAssigneeEmail(story.assigned_to?.unique_name ?? "");
         setPriority(story.priority?.toString() ?? "");
       } else {
+        const defaultProject = projects[0] ?? "";
         setTitle("");
         setDescription("");
-        setProject(projects[0] ?? "");
+        setProject(defaultProject);
         setWorkItemType("User Story");
         setAssigneeEmail("");
         setPriority("");
-        setSprintPath("");
+        const currentSprint = sprints.find(
+          (s) => s.project === defaultProject && s.time_frame === "current"
+        );
+        setSprintPath(currentSprint?.path ?? "");
       }
     }
   }, [open, story, projects]);
@@ -139,7 +143,12 @@ export default function StoryFormModal({
                 </label>
                 <select
                   value={project}
-                  onChange={(e) => setProject(e.target.value)}
+                  onChange={(e) => {
+                    const p = e.target.value;
+                    setProject(p);
+                    const cur = sprints.find(s => s.project === p && s.time_frame === "current");
+                    setSprintPath(cur?.path ?? "");
+                  }}
                   disabled={isEdit}
                   required
                   className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50"
