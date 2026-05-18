@@ -54,6 +54,10 @@ class StoryStateUpdate(BaseModel):
     state: str = Field(..., min_length=1)
 
 
+class StorySprintUpdate(BaseModel):
+    sprint_path: str = Field(..., min_length=1)
+
+
 class SprintStatsOut(BaseModel):
     total: int
     by_state: dict[str, int]

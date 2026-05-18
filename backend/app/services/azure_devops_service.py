@@ -233,6 +233,7 @@ async def update_work_item(
     state: str | None = None,
     priority: int | None = None,
     clear_assignee: bool = False,
+    iteration_path: str | None = None,
 ) -> dict:
     existing = await get_work_item(item_id)
     if existing is None:
@@ -250,6 +251,8 @@ async def update_work_item(
         patch.append({"op": "replace", "path": "/fields/System.AssignedTo", "value": assigned_to_email})
     if state is not None:
         patch.append({"op": "replace", "path": "/fields/System.State", "value": state})
+    if iteration_path is not None:
+        patch.append({"op": "replace", "path": "/fields/System.IterationPath", "value": iteration_path})
     if priority is not None:
         patch.append({"op": "replace", "path": "/fields/Microsoft.VSTS.Common.Priority", "value": priority})
 

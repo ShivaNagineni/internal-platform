@@ -14,6 +14,7 @@ from app.schemas.story import (
     StoryAssignedToOut,
     StoryCreate,
     StoryOut,
+    StorySprintUpdate,
     StoryStateUpdate,
     StoryUpdate,
     StoryUserOut,
@@ -201,6 +202,24 @@ async def update_story_state(
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
 
+    return await _enrich(updated)
+
+
+@router.patch("/{item_id}/sprint", response_model=StoryOut)
+async def move_story_sprint(
+    item_id: int,
+    payload: StorySprintUpdate,
+    current_user: User = Depends(require_manager),
+):
+    try:
+        updated = await ado.update_work_item(item_id=item_id, iteration_path=payload.sprint_path)
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code
+        if 400 <= code < 500:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
     return await _enrich(updated)
 
 

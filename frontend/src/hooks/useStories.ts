@@ -102,6 +102,20 @@ export function useStoriesProjects() {
   });
 }
 
+export function useMoveStoryToSprint() {
+  const qc = useQueryClient();
+  return useMutation<Story, Error, { id: number; sprintPath: string }>({
+    mutationFn: async ({ id, sprintPath }) => {
+      const { data } = await api.patch<Story>(`/stories/${id}/sprint`, { sprint_path: sprintPath });
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: storyKeys.lists() });
+      qc.invalidateQueries({ queryKey: [...storyKeys.all, "sprints"] });
+    },
+  });
+}
+
 export function useStoriesStates() {
   return useQuery<Record<string, string[]>>({
     queryKey: [...storyKeys.all, "states"] as const,

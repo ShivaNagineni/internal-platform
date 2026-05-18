@@ -28,6 +28,7 @@ import {
   useUpdateStory,
   useUpdateStoryState,
   useDeleteStory,
+  useMoveStoryToSprint,
   useSprints,
   useStoriesProjects,
   useStoriesStates,
@@ -378,6 +379,126 @@ function formatDateRange(start: string | null, end: string | null): string {
   return formatDate(start || end);
 }
 
+// ─── Sprint move select ───────────────────────────────────────────────────────
+
+function SprintMoveSelect({
+  story,
+  sprints,
+  currentSprintName,
+  onMove,
+}: {
+  story: Story;
+  sprints: Sprint[];
+  currentSprintName?: string;
+  onMove: (storyId: number, sprintPath: string) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [query, setQuery] = useState("");
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const projectSprints = sprints.filter((s) => s.project === story.project);
+  const filtered = query.trim()
+    ? projectSprints.filter((s) => s.name.toLowerCase().includes(query.toLowerCase()))
+    : projectSprints;
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      const target = e.target as Node;
+      if (!triggerRef.current?.contains(target) && !dropdownRef.current?.contains(target)) {
+        setOpen(false);
+        setQuery("");
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function openDropdown() {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const w = 220;
+    const left = window.innerWidth - rect.left >= w ? rect.left : rect.right - w;
+    setDropdownStyle({ position: "fixed", top: rect.bottom + 4, left: Math.max(8, left), width: w, zIndex: 9999 });
+    setOpen(true);
+  }
+
+  async function handleSelect(sprint: Sprint) {
+    if (sprint.name === currentSprintName) { setOpen(false); setQuery(""); return; }
+    setOpen(false);
+    setQuery("");
+    setPending(true);
+    await onMove(story.id, sprint.path);
+    setPending(false);
+  }
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        onClick={() => open ? (setOpen(false), setQuery("")) : openDropdown()}
+        disabled={pending}
+        title="Move to sprint"
+        className={cn(
+          "text-xs font-medium px-2 py-0.5 rounded-full border transition-opacity whitespace-nowrap",
+          currentSprintName
+            ? "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 border-violet-200 dark:border-violet-800 hover:bg-violet-100 dark:hover:bg-violet-900/40 cursor-pointer"
+            : "text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/50 border-dashed border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer",
+          pending && "opacity-50 cursor-wait"
+        )}
+      >
+        {pending ? "Moving…" : (currentSprintName ?? "No sprint")}
+      </button>
+
+      {open && createPortal(
+        <div ref={dropdownRef} style={dropdownStyle} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden">
+          <div className="p-2 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 dark:bg-slate-800 rounded-lg">
+              <Search className="w-3 h-3 text-slate-400 flex-shrink-0" />
+              <input
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search sprints…"
+                className="flex-1 bg-transparent text-xs outline-none text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
+              />
+            </div>
+          </div>
+          <div className="max-h-52 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-slate-400">No sprints match "{query}"</p>
+            ) : (
+              filtered.map((sprint) => (
+                <div
+                  key={sprint.id}
+                  onClick={() => handleSelect(sprint)}
+                  className={cn(
+                    "px-3 py-2 cursor-pointer text-xs flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors",
+                    sprint.name === currentSprintName
+                      ? "text-violet-600 dark:text-violet-400 font-semibold bg-violet-50 dark:bg-violet-950/30"
+                      : "text-slate-700 dark:text-slate-300"
+                  )}
+                >
+                  <span className="truncate">{sprint.name}</span>
+                  {sprint.name === currentSprintName && (
+                    <span className="text-[10px] text-violet-400 shrink-0">current</span>
+                  )}
+                  {sprint.time_frame === "current" && sprint.name !== currentSprintName && (
+                    <span className="text-[10px] text-indigo-400 shrink-0">active</span>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
 // ─── Shared story table ───────────────────────────────────────────────────────
 
 function StoryTable({
@@ -389,6 +510,8 @@ function StoryTable({
   statesMap,
   compact = false,
   sprintMap,
+  sprints,
+  onMoveSprint,
 }: {
   stories: Story[];
   isManagerPlus: boolean;
@@ -398,6 +521,8 @@ function StoryTable({
   statesMap: Record<string, string[]>;
   compact?: boolean;
   sprintMap?: Map<number, string>;
+  sprints?: Sprint[];
+  onMoveSprint?: (storyId: number, sprintPath: string) => Promise<void>;
 }) {
   if (stories.length === 0) {
     return (
@@ -486,7 +611,14 @@ function StoryTable({
                 </td>
                 {sprintMap && (
                   <td className="px-3 py-2.5 whitespace-nowrap">
-                    {sprintMap.get(story.id) ? (
+                    {isManagerPlus && sprints && onMoveSprint ? (
+                      <SprintMoveSelect
+                        story={story}
+                        sprints={sprints}
+                        currentSprintName={sprintMap.get(story.id)}
+                        onMove={onMoveSprint}
+                      />
+                    ) : sprintMap.get(story.id) ? (
                       <span className="text-xs font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800 px-2 py-0.5 rounded-full">
                         {sprintMap.get(story.id)}
                       </span>
@@ -824,12 +956,14 @@ function AllItemsView({
   onDelete,
   onStateChange,
   statesMap,
+  onMoveSprint,
 }: {
   isManagerPlus: boolean;
   onEdit: (s: Story) => void;
   onDelete: (s: Story) => void;
   onStateChange: (id: number, state: string) => void;
   statesMap: Record<string, string[]>;
+  onMoveSprint: (storyId: number, sprintPath: string) => Promise<void>;
 }) {
   const { data: stories = [], isLoading, error } = useStories();
   const { data: sprints = [] } = useSprints();
@@ -988,6 +1122,8 @@ function AllItemsView({
             onStateChange={onStateChange}
             statesMap={statesMap}
             sprintMap={storySprintMap.size > 0 ? storySprintMap : undefined}
+            sprints={sprints}
+            onMoveSprint={onMoveSprint}
           />
         )}
       </div>
@@ -1010,9 +1146,14 @@ export default function StoriesPage() {
   const qc = useQueryClient();
 
   const { data: statesMap = {} } = useStoriesStates();
+  const moveStoryToSprint = useMoveStoryToSprint();
 
   async function handleStateChange(id: number, state: string) {
     await updateStoryState.mutateAsync({ id, state });
+  }
+
+  async function handleMoveSprint(id: number, sprintPath: string) {
+    await moveStoryToSprint.mutateAsync({ id, sprintPath });
   }
 
   const isManagerPlus = currentUser ? MANAGER_ROLES.includes(currentUser.role) : false;
@@ -1123,6 +1264,7 @@ export default function StoriesPage() {
           onDelete={setDeleteTarget}
           onStateChange={handleStateChange}
           statesMap={statesMap}
+          onMoveSprint={handleMoveSprint}
         />
       )}
 
