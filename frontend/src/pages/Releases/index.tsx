@@ -8,7 +8,21 @@ import {
   Zap,
   Calendar,
   CheckCircle2,
+  RotateCcw,
 } from "lucide-react";
+import FilterSelect from "@/components/FilterSelect";
+import {
+  startOfWeek,
+  startOfMonth,
+  startOfQuarter,
+  startOfYear,
+  endOfWeek,
+  endOfMonth,
+  endOfQuarter,
+  endOfYear,
+  isWithinInterval,
+  parseISO,
+} from "date-fns";
 import type { Release, ReleaseStatus, UserRole } from "@/types";
 import { cn } from "@/lib/utils";
 import { useReleases, useUpdateRelease, useDeployRelease, useApproveRelease, useDeleteRelease } from "@/hooks/useReleases";
@@ -21,6 +35,45 @@ import ReleaseTimeline from "@/components/Releases/ReleaseTimeline";
 
 type ViewMode = "pipeline" | "timeline";
 type StatusFilter = ReleaseStatus | "ALL";
+type DateFilter = "ALL" | "THIS_WEEK" | "THIS_MONTH" | "THIS_QUARTER" | "THIS_YEAR";
+
+const DATE_FILTERS: { value: DateFilter; label: string }[] = [
+  { value: "ALL", label: "All time" },
+  { value: "THIS_WEEK", label: "This week" },
+  { value: "THIS_MONTH", label: "This month" },
+  { value: "THIS_QUARTER", label: "This quarter" },
+  { value: "THIS_YEAR", label: "This year" },
+];
+
+function getDateRange(filter: DateFilter): { start: Date; end: Date } | null {
+  const now = new Date();
+  switch (filter) {
+    case "THIS_WEEK":
+      return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
+    case "THIS_MONTH":
+      return { start: startOfMonth(now), end: endOfMonth(now) };
+    case "THIS_QUARTER":
+      return { start: startOfQuarter(now), end: endOfQuarter(now) };
+    case "THIS_YEAR":
+      return { start: startOfYear(now), end: endOfYear(now) };
+    default:
+      return null;
+  }
+}
+
+function inDateRange(releaseDate: string | null | undefined, range: { start: Date; end: Date } | null): boolean {
+  if (!range) return true;
+  if (!releaseDate) return false;
+  return isWithinInterval(parseISO(releaseDate), range);
+}
+
+const DATE_FILTER_LABELS: Record<DateFilter, string> = {
+  ALL: "All time",
+  THIS_WEEK: "this week",
+  THIS_MONTH: "this month",
+  THIS_QUARTER: "this quarter",
+  THIS_YEAR: "this year",
+};
 
 // ─── Pipeline column config ───────────────────────────────────────────────────
 
@@ -111,6 +164,7 @@ function useCurrentUserRole(): UserRole {
   if (upperRoles.includes("MANAGER")) return "MANAGER";
   return "EMPLOYEE";
 }
+
 
 // ─── Skeleton loader ──────────────────────────────────────────────────────────
 
@@ -267,6 +321,7 @@ export default function ReleasesPage() {
   // UI state
   const [viewMode, setViewMode] = useState<ViewMode>("pipeline");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [dateFilter, setDateFilter] = useState<DateFilter>("ALL");
   const [detailRelease, setDetailRelease] = useState<Release | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
@@ -307,15 +362,15 @@ export default function ReleasesPage() {
 
   // ─── Derived data ────────────────────────────────────────────────────────────
 
-  const filteredReleases = useMemo<Release[]>(() => {
-    if (statusFilter === "ALL") return releases;
-    return releases.filter((r) => r.status === statusFilter);
-  }, [releases, statusFilter]);
+  const dateRange = useMemo(() => getDateRange(dateFilter), [dateFilter]);
 
-  const displayedColumns = useMemo(() => {
-    if (statusFilter === "ALL") return COLUMNS;
-    return COLUMNS.filter((col) => col.status === statusFilter);
-  }, [statusFilter]);
+  const filteredReleases = useMemo<Release[]>(() => {
+    return releases.filter((r) => {
+      const statusMatch = statusFilter === "ALL" || r.status === statusFilter;
+      const dateMatch = inDateRange(r.release_date, dateRange);
+      return statusMatch && dateMatch;
+    });
+  }, [releases, statusFilter, dateRange]);
 
   const releasesByStatus = useMemo<Record<ReleaseStatus, Release[]>>(() => {
     const grouped: Record<ReleaseStatus, Release[]> = {
@@ -331,17 +386,21 @@ export default function ReleasesPage() {
     return grouped;
   }, [filteredReleases]);
 
-  // Stats (always from unfiltered list)
-  const currentYear = new Date().getFullYear();
+  const displayedColumns = useMemo(() => {
+    const base = statusFilter === "ALL" ? COLUMNS : COLUMNS.filter((col) => col.status === statusFilter);
+    if (dateFilter !== "ALL") {
+      return base.filter((col) => releasesByStatus[col.status].length > 0);
+    }
+    return base;
+  }, [statusFilter, dateFilter, releasesByStatus]);
+
+  // Stats
   const activeCount = releases.filter(
     (r) => r.status === "IN_PROGRESS" || r.status === "STAGING"
   ).length;
   const upcomingCount = releases.filter((r) => r.status === "PLANNED").length;
-  const releasedThisYear = releases.filter(
-    (r) =>
-      r.status === "RELEASED" &&
-      r.release_date != null &&
-      new Date(`${r.release_date}T00:00:00`).getFullYear() === currentYear
+  const releasedInPeriod = releases.filter(
+    (r) => r.status === "RELEASED" && inDateRange(r.release_date, dateFilter === "ALL" ? getDateRange("THIS_YEAR") : dateRange)
   ).length;
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -397,15 +456,15 @@ export default function ReleasesPage() {
           />
           <StatCard
             icon={CheckCircle2}
-            label={`Released in ${currentYear}`}
-            value={releasedThisYear}
+            label={`Released ${dateFilter === "ALL" ? `in ${new Date().getFullYear()}` : DATE_FILTER_LABELS[dateFilter]}`}
+            value={releasedInPeriod}
             color="bg-emerald-500"
           />
         </div>
       )}
 
       {/* View toggle + filter bar */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
 
         {/* View mode toggle */}
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl p-1">
@@ -435,23 +494,30 @@ export default function ReleasesPage() {
           </button>
         </div>
 
-        {/* Status filter pills */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {STATUS_FILTERS.map(({ value, label }) => (
+        {/* Filter dropdowns — only relevant for pipeline view */}
+        {viewMode === "pipeline" && <div className="flex items-center gap-2">
+          <FilterSelect
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={STATUS_FILTERS}
+            icon={Zap}
+          />
+          <FilterSelect
+            value={dateFilter}
+            onChange={setDateFilter}
+            options={DATE_FILTERS}
+            icon={Calendar}
+          />
+          {(statusFilter !== "ALL" || dateFilter !== "ALL") && (
             <button
-              key={value}
-              onClick={() => setStatusFilter(value)}
-              className={cn(
-                "text-xs font-medium px-3 py-1.5 rounded-full border transition-colors duration-150",
-                statusFilter === value
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-              )}
+              onClick={() => { setStatusFilter("ALL"); setDateFilter("ALL"); }}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:border-rose-300 dark:hover:border-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors duration-150"
             >
-              {label}
+              <RotateCcw className="w-3.5 h-3.5" />
+              Reset
             </button>
-          ))}
-        </div>
+          )}
+        </div>}
       </div>
 
       {/* ── Pipeline view ─────────────────────────────────────────────────── */}

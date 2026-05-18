@@ -10,6 +10,12 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    try:
+        from app.models.user import User
+        await User.find({"theme": {"$ne": "dark"}}).update({"$set": {"theme": "dark"}})
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("Startup theme migration failed: %s", exc)
     if settings.azure_ad_client_secret:
         try:
             from app.services.graph_service import sync_users_from_azure

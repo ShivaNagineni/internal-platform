@@ -17,9 +17,8 @@ import {
   X,
 } from "lucide-react";
 import { parseISO, isAfter, subDays, startOfWeek, startOfMonth, startOfYear } from "date-fns";
-import * as Select from "@radix-ui/react-select";
-import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import FilterSelect from "@/components/FilterSelect";
 import { useIdeas, useVoteIdea, useUpdateIdea } from "@/hooks/useIdeas";
 import KanbanBoard from "@/components/KanbanBoard";
 import IdeaCard from "@/components/Ideas/IdeaCard";
@@ -100,74 +99,6 @@ function StatCard({ label, value, icon, accent, valueColor }: StatCardProps) {
   );
 }
 
-// ─── Simple select helper ─────────────────────────────────────────────────────
-
-interface SimpleSelectProps<T extends string> {
-  value: T;
-  onChange: (v: T) => void;
-  options: { value: T; label: string; emoji?: string }[];
-  placeholder?: string;
-  className?: string;
-}
-
-function SimpleSelect<T extends string>({
-  value,
-  onChange,
-  options,
-  placeholder,
-  className,
-}: SimpleSelectProps<T>) {
-  const selected = options.find((o) => o.value === value);
-
-  return (
-    <Select.Root value={value} onValueChange={(v) => onChange(v as T)}>
-      <Select.Trigger
-        className={cn(
-          "inline-flex items-center gap-2 text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200",
-          "hover:border-slate-300 dark:hover:border-slate-600 transition-colors duration-150",
-          "focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400",
-          "whitespace-nowrap",
-          className
-        )}
-      >
-        {selected?.emoji && <span className="text-base leading-none">{selected.emoji}</span>}
-        <Select.Value placeholder={placeholder}>
-          {selected?.label ?? placeholder}
-        </Select.Value>
-        <Select.Icon>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-        </Select.Icon>
-      </Select.Trigger>
-      <Select.Portal>
-        <Select.Content
-          position="popper"
-          sideOffset={4}
-          className="z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg overflow-hidden min-w-[160px]"
-        >
-          <Select.Viewport className="p-1">
-            {options.map((opt) => (
-              <Select.Item
-                key={opt.value}
-                value={opt.value}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer outline-none",
-                  "data-[highlighted]:bg-indigo-50 dark:data-[highlighted]:bg-indigo-950/50 data-[highlighted]:text-indigo-700 dark:data-[highlighted]:text-indigo-300",
-                  "data-[state=checked]:font-medium"
-                )}
-              >
-                {opt.emoji && <span>{opt.emoji}</span>}
-                <Select.ItemText>{opt.label}</Select.ItemText>
-                <Select.ItemIndicator className="ml-auto">
-                  <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                </Select.ItemIndicator>
-              </Select.Item>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
-    </Select.Root>
-  );
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -387,7 +318,7 @@ export default function IdeasPage() {
         {/* Category filter */}
         <div className="flex items-center gap-1.5">
           <Filter className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-          <SimpleSelect
+          <FilterSelect
             value={categoryFilter}
             onChange={setCategoryFilter}
             options={CATEGORY_OPTIONS}
@@ -395,7 +326,7 @@ export default function IdeasPage() {
         </div>
 
         {/* Status filter */}
-        <SimpleSelect
+        <FilterSelect
           value={statusFilter}
           onChange={setStatusFilter}
           options={STATUS_OPTIONS}
@@ -405,7 +336,7 @@ export default function IdeasPage() {
         {authorOptions.length > 2 && (
           <div className="flex items-center gap-1.5">
             <User className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-            <SimpleSelect
+            <FilterSelect
               value={authorFilter}
               onChange={setAuthorFilter}
               options={authorOptions}
@@ -416,7 +347,7 @@ export default function IdeasPage() {
         {/* Date filter */}
         <div className="flex items-center gap-1.5">
           <CalendarDays className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-          <SimpleSelect
+          <FilterSelect
             value={dateFilter}
             onChange={setDateFilter}
             options={DATE_FILTER_OPTIONS}
