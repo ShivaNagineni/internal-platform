@@ -99,6 +99,8 @@ export function useVoteIdea() {
       });
       queryClient.setQueryData<Idea>(ideaKeys.detail(id), updatedIdea);
       queryClient.invalidateQueries({ queryKey: ideaKeys.all });
+      // Votes change user points — keep leaderboard in sync
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });
 }

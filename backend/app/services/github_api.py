@@ -141,9 +141,10 @@ async def create_qa_to_main_pr(
             if main_branch:
                 resolved_main = next((b for b in branches if b == main_branch), None) \
                     or next((b for b in branches if b.lower() == main_branch.lower()), None) \
-                    or "main"
+                    or main_branch  # pass configured value through; GitHub will reject if wrong
             else:
-                resolved_main = next((b for b in branches if b.lower() in ("main", "master")), "main")
+                resolved_main = next((b for b in branches if b.lower() in ("main", "master")), None) \
+                    or "main"
 
             if not resolved_qa:
                 logger.warning("No 'qa' branch found in %s (branches: %s) — skipping", repo, branches)
@@ -208,6 +209,58 @@ async def merge_pr(pr_number: int, github_repo: str | None = None) -> bool:
         else:
             logger.error("Failed to merge PR #%s in %s: HTTP %s — %s", pr_number, repo, resp.status_code, resp.text)
             return False
+
+
+async def has_commits_ahead(
+    github_repo: str,
+    dev_branch: str,
+    qa_branch: str,
+) -> tuple[bool, str]:
+    """Return (True, "") if dev_branch has commits ahead of qa_branch, else (False, reason)."""
+    settings = get_settings()
+    if not settings.github_token:
+        return True, ""  # can't verify, allow through
+
+    headers = {
+        "Authorization": f"Bearer {settings.github_token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    async with httpx.AsyncClient(timeout=15) as client:
+        br_resp = await client.get(
+            f"{_BASE}/repos/{github_repo}/branches",
+            headers=headers,
+            params={"per_page": 100},
+        )
+        branches = [b["name"] for b in br_resp.json()] if br_resp.status_code == 200 else []
+
+        resolved_dev = (
+            next((b for b in branches if b == dev_branch), None)
+            or next((b for b in branches if b.lower() == dev_branch.lower()), dev_branch)
+        )
+        resolved_qa = (
+            next((b for b in branches if b == qa_branch), None)
+            or next((b for b in branches if b.lower() == qa_branch.lower()), qa_branch)
+        )
+
+        resp = await client.get(
+            f"{_BASE}/repos/{github_repo}/compare/{resolved_qa}...{resolved_dev}",
+            headers=headers,
+        )
+        if resp.status_code == 404:
+            return False, (
+                f"Branch not found in {github_repo} — check branch names in repository settings."
+            )
+        if resp.status_code != 200:
+            return True, ""  # can't determine, allow through
+
+        ahead_by = resp.json().get("ahead_by", 0)
+        if ahead_by == 0:
+            return False, (
+                f"'{resolved_dev}' has no new commits compared to '{resolved_qa}' "
+                f"in {github_repo}. Nothing to release."
+            )
+        return True, ""
 
 
 async def get_pr_status(pr_number: int, github_repo: str | None = None) -> dict | None:

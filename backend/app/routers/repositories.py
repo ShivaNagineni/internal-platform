@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import uuid
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.auth import get_current_user
+from app.core.config import get_settings
 from app.models.user import User, UserRole
 from app.models.repository import Repository
 from app.models.release import Release
@@ -105,3 +107,76 @@ async def delete_repository(
         )
 
     await repo.delete()
+
+
+@router.post("/sync-from-github", response_model=list[RepositoryOut])
+async def sync_repos_from_github(current_user: User = Depends(get_current_user)):
+    """Fetch all repos accessible to the configured GitHub token and import new ones."""
+    _require_admin_or_owner(current_user)
+
+    settings = get_settings()
+    if not settings.github_token:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="GitHub token not configured")
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            "https://api.github.com/user/repos",
+            headers={
+                "Authorization": f"Bearer {settings.github_token}",
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+            params={"per_page": 100, "type": "all", "sort": "full_name"},
+            timeout=15,
+        )
+
+    if resp.status_code != 200:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"GitHub API returned {resp.status_code}: {resp.text[:200]}",
+        )
+
+    gh_repos = resp.json()
+    created: list[Repository] = []
+
+    async with httpx.AsyncClient() as branch_client:
+        for gh in gh_repos:
+            full_name: str = gh["full_name"]
+            existing = await Repository.find_one(Repository.github_repo == full_name)
+            if existing:
+                continue
+
+            # Fetch actual branches so we can detect real names regardless of casing
+            br_resp = await branch_client.get(
+                f"https://api.github.com/repos/{full_name}/branches",
+                headers={
+                    "Authorization": f"Bearer {settings.github_token}",
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                },
+                params={"per_page": 100},
+                timeout=15,
+            )
+            branches = [b["name"] for b in br_resp.json()] if br_resp.status_code == 200 else []
+
+            # Case-insensitive detection — use the real branch name as it exists in GitHub
+            dev_branch = next(
+                (b for b in branches if b.lower() in ("development", "dev")), "Development"
+            )
+            qa_branch = next(
+                (b for b in branches if b.lower() in ("qa", "staging", "stage")), "Qa"
+            )
+            # GitHub's own default_branch is always the exact casing
+            main_branch = gh.get("default_branch", "main")
+
+            repo = Repository(
+                name=gh["name"],
+                github_repo=full_name,
+                dev_branch=dev_branch,
+                qa_branch=qa_branch,
+                main_branch=main_branch,
+            )
+            await repo.insert()
+            created.append(repo)
+
+    return created

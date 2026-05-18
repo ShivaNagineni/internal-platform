@@ -12,7 +12,11 @@ import {
   Rocket,
   Loader2,
   AlertCircle,
+  User,
+  CalendarDays,
+  X,
 } from "lucide-react";
+import { parseISO, isAfter, subDays, startOfWeek, startOfMonth, startOfYear } from "date-fns";
 import * as Select from "@radix-ui/react-select";
 import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -44,6 +48,29 @@ const STATUS_OPTIONS: { value: IdeaStatus | "ALL"; label: string }[] = [
   { value: "REJECTED", label: "Rejected" },
   { value: "IMPLEMENTED", label: "Implemented" },
 ];
+
+type DateFilter = "ALL" | "WEEK" | "MONTH" | "YEAR" | "30D" | "90D";
+
+const DATE_FILTER_OPTIONS: { value: DateFilter; label: string }[] = [
+  { value: "ALL", label: "All Time" },
+  { value: "WEEK", label: "This Week" },
+  { value: "MONTH", label: "This Month" },
+  { value: "30D", label: "Last 30 Days" },
+  { value: "90D", label: "Last 90 Days" },
+  { value: "YEAR", label: "This Year" },
+];
+
+function isAfterDateFilter(dateStr: string, filter: DateFilter): boolean {
+  if (filter === "ALL") return true;
+  const date = parseISO(dateStr);
+  const now = new Date();
+  if (filter === "WEEK") return isAfter(date, startOfWeek(now));
+  if (filter === "MONTH") return isAfter(date, startOfMonth(now));
+  if (filter === "YEAR") return isAfter(date, startOfYear(now));
+  if (filter === "30D") return isAfter(date, subDays(now, 30));
+  if (filter === "90D") return isAfter(date, subDays(now, 90));
+  return true;
+}
 
 // ─── View type ────────────────────────────────────────────────────────────────
 
@@ -160,6 +187,8 @@ export default function IdeasPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<IdeaCategory | "ALL">("ALL");
   const [statusFilter, setStatusFilter] = useState<IdeaStatus | "ALL">("ALL");
+  const [authorFilter, setAuthorFilter] = useState<string>("ALL");
+  const [dateFilter, setDateFilter] = useState<DateFilter>("ALL");
 
   // Modal state
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
@@ -171,6 +200,19 @@ export default function IdeasPage() {
   const { data: ideas = [], isLoading, isError, error } = useIdeas();
   const { mutate: voteIdea, isPending: isVotePending } = useVoteIdea();
   const { mutate: updateIdea } = useUpdateIdea();
+
+  // Unique authors derived from loaded ideas (for the author dropdown)
+  const authorOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { value: string; label: string }[] = [{ value: "ALL", label: "All Authors" }];
+    for (const idea of ideas) {
+      if (!seen.has(idea.author.id)) {
+        seen.add(idea.author.id);
+        opts.push({ value: idea.author.id, label: idea.author.display_name });
+      }
+    }
+    return opts;
+  }, [ideas]);
 
   // Filtered ideas for list view (board groups internally)
   const filteredIdeas = useMemo(() => {
@@ -190,8 +232,18 @@ export default function IdeasPage() {
     if (statusFilter !== "ALL") {
       list = list.filter((i) => i.status === statusFilter);
     }
+    if (authorFilter !== "ALL") {
+      list = list.filter((i) => i.author.id === authorFilter);
+    }
+    if (dateFilter !== "ALL") {
+      list = list.filter((i) => isAfterDateFilter(i.created_at, dateFilter));
+    }
     return list;
-  }, [ideas, search, categoryFilter, statusFilter]);
+  }, [ideas, search, categoryFilter, statusFilter, authorFilter, dateFilter]);
+
+  // When any filter is active the board shows mostly empty columns, so force list
+  const isFiltered = Boolean(search.trim()) || categoryFilter !== "ALL" || statusFilter !== "ALL" || authorFilter !== "ALL" || dateFilter !== "ALL";
+  const effectiveView: ViewMode = isFiltered ? "list" : view;
 
   // Stats
   const totalIdeas = ideas.length;
@@ -284,14 +336,18 @@ export default function IdeasPage() {
 
       {/* ─── Toolbar: view toggle + filters ─── */}
       <div className="flex flex-wrap items-center gap-3">
-        {/* View toggle */}
+        {/* View toggle — board is disabled while filters are active */}
         <div className="inline-flex items-center bg-slate-100 dark:bg-slate-800/80 rounded-xl p-1 gap-0.5">
           <button
             onClick={() => setView("board")}
+            disabled={isFiltered}
+            title={isFiltered ? "Clear filters to switch to board view" : undefined}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
-              view === "board"
+              effectiveView === "board"
                 ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm"
+                : isFiltered
+                ? "text-slate-300 dark:text-slate-600 cursor-not-allowed"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             )}
           >
@@ -302,7 +358,7 @@ export default function IdeasPage() {
             onClick={() => setView("list")}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
-              view === "list"
+              effectiveView === "list"
                 ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
             )}
@@ -345,11 +401,48 @@ export default function IdeasPage() {
           options={STATUS_OPTIONS}
         />
 
-        {/* Results count */}
-        {(search || categoryFilter !== "ALL" || statusFilter !== "ALL") && (
-          <span className="text-xs text-slate-400 ml-auto">
-            {filteredIdeas.length} result{filteredIdeas.length !== 1 ? "s" : ""}
-          </span>
+        {/* Author filter */}
+        {authorOptions.length > 2 && (
+          <div className="flex items-center gap-1.5">
+            <User className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+            <SimpleSelect
+              value={authorFilter}
+              onChange={setAuthorFilter}
+              options={authorOptions}
+            />
+          </div>
+        )}
+
+        {/* Date filter */}
+        <div className="flex items-center gap-1.5">
+          <CalendarDays className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+          <SimpleSelect
+            value={dateFilter}
+            onChange={setDateFilter}
+            options={DATE_FILTER_OPTIONS}
+          />
+        </div>
+
+        {/* Results count + reset */}
+        {isFiltered && (
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-xs text-slate-400">
+              {filteredIdeas.length} result{filteredIdeas.length !== 1 ? "s" : ""}
+            </span>
+            <button
+              onClick={() => {
+                setSearch("");
+                setCategoryFilter("ALL");
+                setStatusFilter("ALL");
+                setAuthorFilter("ALL");
+                setDateFilter("ALL");
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg transition-colors duration-150"
+            >
+              <X className="w-3 h-3" />
+              Reset filters
+            </button>
+          </div>
         )}
       </div>
 
@@ -381,7 +474,7 @@ export default function IdeasPage() {
       )}
 
       {/* ─── Board view ─── */}
-      {!isLoading && !isError && view === "board" && (
+      {!isLoading && !isError && effectiveView === "board" && (
         <div className="overflow-x-auto -mx-6 px-6">
           <KanbanBoard
             ideas={filteredIdeas}
@@ -397,7 +490,7 @@ export default function IdeasPage() {
       )}
 
       {/* ─── List view ─── */}
-      {!isLoading && !isError && view === "list" && (
+      {!isLoading && !isError && effectiveView === "list" && (
         <div>
           {filteredIdeas.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -407,12 +500,12 @@ export default function IdeasPage() {
               <div className="text-center">
                 <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">No ideas found</p>
                 <p className="text-xs text-slate-400 mt-1">
-                  {search || categoryFilter !== "ALL" || statusFilter !== "ALL"
+                  {search || categoryFilter !== "ALL" || statusFilter !== "ALL" || authorFilter !== "ALL" || dateFilter !== "ALL"
                     ? "Try adjusting your filters"
                     : "Be the first to submit an idea!"}
                 </p>
               </div>
-              {!search && categoryFilter === "ALL" && statusFilter === "ALL" && (
+              {!search && categoryFilter === "ALL" && statusFilter === "ALL" && authorFilter === "ALL" && dateFilter === "ALL" && (
                 <button
                   onClick={() => setSubmitOpen(true)}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors duration-150"

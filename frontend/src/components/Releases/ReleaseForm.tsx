@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, AlertCircle, Loader2 } from "lucide-react";
-import type { Release } from "@/types";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { X, AlertCircle, Loader2, ChevronDown, GitBranch, Check, RefreshCw } from "lucide-react";
+import type { Release, Repository } from "@/types";
 import { cn } from "@/lib/utils";
 import { useCreateRelease, useUpdateRelease } from "@/hooks/useReleases";
-import { useRepositories } from "@/hooks/useRepositories";
+import { useRepositories, useSyncReposFromGitHub } from "@/hooks/useRepositories";
 
 // ─── Semver validation ────────────────────────────────────────────────────────
 
@@ -93,6 +94,137 @@ const INPUT_BASE =
 
 const INPUT_ERROR = "border-rose-300 dark:border-rose-500/80 focus:ring-rose-400";
 
+// ─── Repository multi-select dropdown ────────────────────────────────────────
+
+function RepoMultiSelect({
+  repositories,
+  selected,
+  onChange,
+  disabled,
+  onSync,
+  isSyncing,
+}: {
+  repositories: Repository[];
+  selected: string[];
+  onChange: (ids: string[]) => void;
+  disabled?: boolean;
+  onSync?: () => void;
+  isSyncing?: boolean;
+}) {
+  const selectedRepos = repositories.filter((r) => selected.includes(r.id));
+
+  function toggle(id: string) {
+    if (selected.includes(id)) {
+      onChange(selected.filter((s) => s !== id));
+    } else {
+      onChange([...selected, id]);
+    }
+  }
+
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild disabled={disabled}>
+        <button
+          type="button"
+          className={cn(
+            "w-full flex items-center justify-between gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm shadow-sm transition-colors duration-150",
+            "hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent",
+            disabled && "opacity-50 cursor-not-allowed",
+          )}
+        >
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <GitBranch className="w-4 h-4 text-slate-400 flex-shrink-0" />
+            {selectedRepos.length === 0 ? (
+              <span className="text-slate-400 dark:text-slate-500">Select repositories…</span>
+            ) : (
+              <div className="flex flex-wrap gap-1.5 min-w-0">
+                {selectedRepos.map((repo) => (
+                  <span
+                    key={repo.id}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/80 rounded-md text-xs font-medium"
+                  >
+                    {repo.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
+        </button>
+      </DropdownMenu.Trigger>
+
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="start"
+          sideOffset={4}
+          className="z-[60] w-[var(--radix-dropdown-menu-trigger-width)] min-w-[220px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden"
+        >
+          {repositories.length === 0 ? (
+            <div className="px-4 py-4 flex flex-col items-center gap-2 text-center">
+              <p className="text-sm text-slate-500 dark:text-slate-400">No repositories yet.</p>
+              {onSync && (
+                <button
+                  type="button"
+                  onClick={onSync}
+                  disabled={isSyncing}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-950 rounded-lg transition-colors duration-150 disabled:opacity-60"
+                >
+                  <RefreshCw className={cn("w-3 h-3", isSyncing && "animate-spin")} />
+                  {isSyncing ? "Fetching from GitHub…" : "Fetch from GitHub"}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="p-1 max-h-52 overflow-y-auto">
+              {repositories.map((repo) => {
+                const isChecked = selected.includes(repo.id);
+                return (
+                  <DropdownMenu.Item
+                    key={repo.id}
+                    onSelect={(e) => {
+                      e.preventDefault(); // keep menu open on select
+                      toggle(repo.id);
+                    }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer outline-none hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors duration-100 group"
+                  >
+                    <div
+                      className={cn(
+                        "w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors duration-100",
+                        isChecked
+                          ? "bg-indigo-600 border-indigo-600"
+                          : "border-slate-300 dark:border-slate-600 group-hover:border-indigo-400",
+                      )}
+                    >
+                      {isChecked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{repo.name}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 truncate font-mono">{repo.github_repo}</p>
+                    </div>
+                  </DropdownMenu.Item>
+                );
+              })}
+            </div>
+          )}
+
+          {selected.length > 0 && (
+            <div className="border-t border-slate-100 dark:border-slate-800 px-3 py-2 flex items-center justify-between">
+              <span className="text-xs text-slate-400">{selected.length} selected</span>
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="text-xs text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 font-medium transition-colors"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ReleaseForm({ open, onOpenChange, release }: Props) {
@@ -100,6 +232,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
   const createRelease = useCreateRelease();
   const updateRelease = useUpdateRelease();
   const { data: repositories = [] } = useRepositories();
+  const syncRepos = useSyncReposFromGitHub();
 
   const [form, setForm] = useState<FormState>(() => getInitialState(release));
   const [errors, setErrors] = useState<FormErrors>({});
@@ -286,6 +419,18 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
               </Field>
 
               {/* Repositories */}
+              <Field label="Repositories" hint="Select one or more repos for this release">
+                <RepoMultiSelect
+                  repositories={repositories}
+                  selected={form.repository_ids}
+                  onChange={(ids) => setField("repository_ids", ids)}
+                  disabled={isBusy}
+                  onSync={() => syncRepos.mutate()}
+                  isSyncing={syncRepos.isPending}
+                />
+              </Field>
+
+              {/* OLD checkbox implementation — kept for reference
               <Field label="Repositories" hint="Select repositories for this release">
                 <div className="grid gap-2 border border-slate-200 dark:border-slate-700 rounded-xl p-3 bg-slate-50/50 dark:bg-slate-800/50 max-h-48 overflow-y-auto">
                   {repositories.length === 0 ? (
@@ -315,6 +460,7 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
                   )}
                 </div>
               </Field>
+              */}
 
               {/* Changelog — edit mode only */}
               {isEditMode && (

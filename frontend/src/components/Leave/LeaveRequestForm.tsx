@@ -321,7 +321,7 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
                     min={today}
                     value={startDate}
                     onChange={(e) => handleStartDateChange(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150 [color-scheme:light] dark:[color-scheme:dark]"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150 [color-scheme:light] dark:[color-scheme:dark] dark:[&::-webkit-calendar-picker-indicator]:invert"
                   />
                 </div>
                 <div>
@@ -336,7 +336,7 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
                     value={endDate}
                     onChange={(e) => handleEndDateChange(e.target.value)}
                     className={cn(
-                      "w-full rounded-lg border bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150 [color-scheme:light] dark:[color-scheme:dark]",
+                      "w-full rounded-lg border bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-shadow duration-150 [color-scheme:light] dark:[color-scheme:dark] dark:[&::-webkit-calendar-picker-indicator]:invert",
                       endDateError ? "border-rose-400 ring-1 ring-rose-300" : "border-slate-200 dark:border-slate-700",
                     )}
                   />
@@ -369,6 +369,7 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
                   id={`${formId}-reason`}
                   rows={3}
                   required
+                  maxLength={500}
                   placeholder="Please provide a brief reason (min. 10 characters)..."
                   value={reason}
                   onChange={(e) => {
@@ -380,7 +381,7 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
                     reasonError ? "border-rose-400 ring-1 ring-rose-300" : "border-slate-200 dark:border-slate-700",
                   )}
                 />
-                <div className="mt-1 flex items-center justify-between">
+                <div className="mt-1.5 flex items-center justify-between gap-2">
                   {reasonError ? (
                     <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3 flex-shrink-0" />
@@ -389,14 +390,37 @@ export default function LeaveRequestForm({ open, onOpenChange, initialData }: Pr
                   ) : (
                     <span />
                   )}
-                  <span
-                    className={cn(
-                      "text-xs ml-auto",
-                      reason.length < 10 ? "text-slate-400 dark:text-slate-500" : "text-emerald-600 dark:text-emerald-400",
-                    )}
-                  >
-                    {reason.length} / 10 min
-                  </span>
+                  <div className="flex items-center gap-1.5 ml-auto shrink-0">
+                    <div className="w-16 h-1 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all duration-200",
+                          reason.length === 0
+                            ? "w-0"
+                            : reason.length < 10
+                            ? "bg-rose-400"
+                            : reason.length < 50
+                            ? "bg-amber-400"
+                            : "bg-emerald-500",
+                        )}
+                        style={{ width: `${Math.min(100, (reason.length / 500) * 100)}%` }}
+                      />
+                    </div>
+                    <span
+                      className={cn(
+                        "text-xs font-medium tabular-nums",
+                        reason.length === 0
+                          ? "text-slate-300 dark:text-slate-600"
+                          : reason.length < 10
+                          ? "text-rose-500 dark:text-rose-400"
+                          : reason.length < 50
+                          ? "text-amber-500 dark:text-amber-400"
+                          : "text-emerald-600 dark:text-emerald-400",
+                      )}
+                    >
+                      {reason.length} / 500
+                    </span>
+                  </div>
                 </div>
               </div>
 
