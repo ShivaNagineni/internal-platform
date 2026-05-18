@@ -2,6 +2,7 @@ import { useState, useMemo, Component } from "react";
 import type { ComponentType, ErrorInfo, ReactNode } from "react";
 import { useMsal, useAccount } from "@azure/msal-react";
 import FilterSelect from "@/components/FilterSelect";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   Plus,
   CalendarOff,
@@ -546,6 +547,7 @@ export default function LeavePage() {
     action: "approve" | "reject";
     leaveId: string;
   }>({ open: false, action: "approve", leaveId: "" });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
 
   const allLeaves: Leave[] = leaves ?? [];
 
@@ -583,9 +585,7 @@ export default function LeavePage() {
   }
 
   function handleDelete(id: string) {
-    if (window.confirm("Are you sure you want to delete this leave request?")) {
-      deleteLeave(id, { onError: (err) => console.error("Delete failed", err) });
-    }
+    setDeleteConfirm({ open: true, id });
   }
 
   function handleApprovalSuccess() {
@@ -780,6 +780,20 @@ export default function LeavePage() {
         action={approvalModal.action}
         leaveId={approvalModal.leaveId}
         onSuccess={handleApprovalSuccess}
+      />
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm((prev) => ({ ...prev, open }))}
+        variant="danger"
+        title="Delete leave request"
+        description="Are you sure you want to delete this leave request? This cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (deleteConfirm.id) {
+            deleteLeave(deleteConfirm.id, { onError: (err) => console.error("Delete failed", err) });
+          }
+        }}
       />
     </LeaveErrorBoundary>
   );

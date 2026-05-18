@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Edit, ChevronRight, User, Trash2, GitBranch } from "lucide-react";
 import type { Release, ReleaseStatus, UserRole } from "@/types";
 import { cn, formatDate, getInitials } from "@/lib/utils";
 import StatusBadge from "@/components/StatusBadge";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 // ─── Pipeline step config ─────────────────────────────────────────────────────
 
@@ -73,6 +75,7 @@ export default function ReleaseCard({
   onDelete,
   onClick,
 }: Props) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const canManage = currentUserRole === "MANAGER" || currentUserRole === "ADMIN" || currentUserRole === "OWNER";
   const isCancelled = release.status === "CANCELLED";
   const currentIndex = getPipelineStepIndex(release.status);
@@ -105,9 +108,7 @@ export default function ReleaseCard({
 
   function handleDelete(e: React.MouseEvent) {
     e.stopPropagation();
-    if (onDelete && window.confirm(`Delete release v${release.version}? This cannot be undone.`)) {
-      onDelete(release.id);
-    }
+    setDeleteOpen(true);
   }
 
   return (
@@ -304,6 +305,18 @@ export default function ReleaseCard({
         )}
 
       </div>
+
+      {onDelete && (
+        <ConfirmDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          variant="danger"
+          title="Delete release"
+          description={`Are you sure you want to delete v${release.version} — "${release.title}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          onConfirm={() => onDelete(release.id)}
+        />
+      )}
     </div>
   );
 }
