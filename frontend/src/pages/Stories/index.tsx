@@ -506,6 +506,7 @@ function SprintMoveSelect({
 function StoryTable({
   stories,
   isManagerPlus,
+  currentUserEmail,
   onEdit,
   onDelete,
   onStateChange,
@@ -517,6 +518,7 @@ function StoryTable({
 }: {
   stories: Story[];
   isManagerPlus: boolean;
+  currentUserEmail?: string;
   onEdit: (s: Story) => void;
   onDelete: (s: Story) => void;
   onStateChange: (id: number, state: string) => void;
@@ -551,9 +553,7 @@ function StoryTable({
             {!compact && (
               <th className="text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide px-3 py-2.5">Updated</th>
             )}
-            {isManagerPlus && (
-              <th className="text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide px-4 py-2.5">Actions</th>
-            )}
+            <th className="text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide px-4 py-2.5">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50 dark:divide-slate-800/60">
@@ -634,24 +634,32 @@ function StoryTable({
                     <span className="text-xs text-slate-500 dark:text-slate-400">{formatDate(story.changed_date)}</span>
                   </td>
                 )}
-                {isManagerPlus && (
-                  <td className="px-4 py-2.5">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => onEdit(story)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(story)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                )}
+                {(() => {
+                  const isOwn = story.assigned_to?.unique_name?.toLowerCase() === currentUserEmail?.toLowerCase();
+                  const canDelete = isManagerPlus || isOwn;
+                  return (
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center justify-end gap-1">
+                        {isManagerPlus && (
+                          <button
+                            onClick={() => onEdit(story)}
+                            className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => onDelete(story)}
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  );
+                })()}
               </tr>
             );
           })}
@@ -666,6 +674,7 @@ function StoryTable({
 function SprintCard({
   sprint,
   isManagerPlus,
+  currentUserEmail,
   onEdit,
   onDelete,
   onStateChange,
@@ -674,6 +683,7 @@ function SprintCard({
 }: {
   sprint: Sprint;
   isManagerPlus: boolean;
+  currentUserEmail?: string;
   onEdit: (s: Story) => void;
   onDelete: (s: Story) => void;
   onStateChange: (id: number, state: string) => void;
@@ -817,6 +827,7 @@ function SprintCard({
           <StoryTable
             stories={sprint.stories}
             isManagerPlus={isManagerPlus}
+            currentUserEmail={currentUserEmail}
             onEdit={onEdit}
             onDelete={onDelete}
             onStateChange={onStateChange}
@@ -833,12 +844,14 @@ function SprintCard({
 
 function SprintsView({
   isManagerPlus,
+  currentUserEmail,
   onEdit,
   onDelete,
   onStateChange,
   statesMap,
 }: {
   isManagerPlus: boolean;
+  currentUserEmail?: string;
   onEdit: (s: Story) => void;
   onDelete: (s: Story) => void;
   onStateChange: (id: number, state: string) => void;
@@ -917,6 +930,7 @@ function SprintsView({
           isManagerPlus={isManagerPlus}
           onEdit={onEdit}
           onDelete={onDelete}
+          currentUserEmail={currentUserEmail}
           onStateChange={onStateChange}
           statesMap={statesMap}
           defaultExpanded
@@ -939,6 +953,7 @@ function SprintsView({
               isManagerPlus={isManagerPlus}
               onEdit={onEdit}
               onDelete={onDelete}
+              currentUserEmail={currentUserEmail}
               onStateChange={onStateChange}
               statesMap={statesMap}
               defaultExpanded={false}
@@ -954,6 +969,7 @@ function SprintsView({
 
 function AllItemsView({
   isManagerPlus,
+  currentUserEmail,
   onEdit,
   onDelete,
   onStateChange,
@@ -961,6 +977,7 @@ function AllItemsView({
   onMoveSprint,
 }: {
   isManagerPlus: boolean;
+  currentUserEmail?: string;
   onEdit: (s: Story) => void;
   onDelete: (s: Story) => void;
   onStateChange: (id: number, state: string) => void;
@@ -1119,6 +1136,7 @@ function AllItemsView({
           <StoryTable
             stories={filtered}
             isManagerPlus={isManagerPlus}
+            currentUserEmail={currentUserEmail}
             onEdit={onEdit}
             onDelete={onDelete}
             onStateChange={onStateChange}
@@ -1254,6 +1272,7 @@ export default function StoriesPage() {
       {activeTab === "sprints" ? (
         <SprintsView
           isManagerPlus={isManagerPlus}
+          currentUserEmail={currentUser?.email}
           onEdit={openEdit}
           onDelete={setDeleteTarget}
           onStateChange={handleStateChange}
@@ -1262,6 +1281,7 @@ export default function StoriesPage() {
       ) : (
         <AllItemsView
           isManagerPlus={isManagerPlus}
+          currentUserEmail={currentUser?.email}
           onEdit={openEdit}
           onDelete={setDeleteTarget}
           onStateChange={handleStateChange}

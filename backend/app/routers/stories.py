@@ -284,7 +284,20 @@ async def update_story(item_id: int, payload: StoryUpdate, current_user: User = 
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_story(item_id: int, current_user: User = Depends(require_manager)):
+async def delete_story(item_id: int, current_user: User = Depends(get_current_user)):
+    is_manager_plus = current_user.role in {UserRole.MANAGER, UserRole.ADMIN, UserRole.OWNER}
+
+    if not is_manager_plus:
+        try:
+            item = await ado.get_work_item(item_id)
+        except Exception as exc:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
+        if item is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Work item not found")
+        assigned = item.get("assigned_to")
+        if not assigned or assigned.get("unique_name", "").lower() != current_user.email.lower():
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only delete stories assigned to you")
+
     try:
         await ado.delete_work_item(item_id)
     except Exception as exc:
