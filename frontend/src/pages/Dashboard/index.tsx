@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 import { useDashboardStats, useWhoIsOut } from "@/hooks/useDashboard";
 import { useIdeas } from "@/hooks/useIdeas";
 import { useReleases } from "@/hooks/useReleases";
+import { useCurrentUser } from "@/hooks/useUsers";
+import { getZohoUser, isZohoAuthenticated } from "@/lib/zohoAuth";
 import WhoIsOut from "@/components/WhoIsOut";
 import StatusBadge from "@/components/StatusBadge";
 import type { Idea, Release } from "@/types";
@@ -215,8 +217,10 @@ export default function Dashboard() {
   const { accounts } = useMsal();
   const account = useAccount(accounts[0] ?? null);
   const navigate = useNavigate();
+  const { data: currentUser } = useCurrentUser();
+  const zohoUser = isZohoAuthenticated() ? getZohoUser() : null;
 
-  const displayName = account?.name ?? "there";
+  const displayName = currentUser?.display_name ?? zohoUser?.display_name ?? account?.name ?? "there";
   const firstName = getFirstName(displayName);
   const greeting = getGreeting();
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
