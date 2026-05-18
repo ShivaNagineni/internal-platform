@@ -399,7 +399,9 @@ function SprintMoveSelect({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const projectSprints = sprints.filter((s) => s.project === story.project);
+  const projectSprints = sprints.filter(
+    (s) => s.project === story.project && s.time_frame !== "past"
+  );
   const filtered = query.trim()
     ? projectSprints.filter((s) => s.name.toLowerCase().includes(query.toLowerCase()))
     : projectSprints;

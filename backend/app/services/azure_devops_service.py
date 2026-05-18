@@ -405,14 +405,18 @@ async def list_sprints_with_stories() -> list[dict]:
         if not isinstance(result, Exception):
             all_iterations.extend(result)  # type: ignore[arg-type]
 
-    # Keep only current + past, sorted: current first then past by most recent
+    # current first, then future (upcoming) sorted by start date, then past by most recent
     current = [i for i in all_iterations if i["time_frame"] == "current"]
+    future = sorted(
+        [i for i in all_iterations if i["time_frame"] == "future"],
+        key=lambda i: i.get("start_date") or "",
+    )
     past = sorted(
         [i for i in all_iterations if i["time_frame"] == "past"],
         key=lambda i: i.get("finish_date") or "",
         reverse=True,
     )
-    ordered = current + past
+    ordered = current + future + past
 
     # Fetch stories for all sprints in parallel
     results = await asyncio.gather(
