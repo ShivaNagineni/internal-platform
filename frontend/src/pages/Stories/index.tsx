@@ -963,7 +963,7 @@ function AllItemsView({
   onDelete: (s: Story) => void;
   onStateChange: (id: number, state: string) => void;
   statesMap: Record<string, string[]>;
-  onMoveSprint: (storyId: number, sprintPath: string) => Promise<void>;
+  onMoveSprint?: (storyId: number, sprintPath: string) => Promise<void>;
 }) {
   const { data: stories = [], isLoading, error } = useStories();
   const { data: sprints = [] } = useSprints();
@@ -1264,7 +1264,7 @@ export default function StoriesPage() {
           onDelete={setDeleteTarget}
           onStateChange={handleStateChange}
           statesMap={statesMap}
-          onMoveSprint={handleMoveSprint}
+          onMoveSprint={isManagerPlus ? handleMoveSprint : undefined}
         />
       )}
 
