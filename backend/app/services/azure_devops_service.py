@@ -288,11 +288,20 @@ async def delete_work_item(item_id: int) -> None:
         resp = await client.delete(
             f"{_project_url(existing['project'])}/_apis/wit/workitems/{item_id}",
             headers=_get_auth_headers(),
-            params={"api-version": API_VERSION, "destroy": "true"},
+            params={"api-version": API_VERSION},
         )
         if resp.status_code == 404:
             return
-        resp.raise_for_status()
+        if not resp.is_success:
+            try:
+                detail = resp.json().get("message") or resp.text
+            except Exception:
+                detail = resp.text
+            raise httpx.HTTPStatusError(
+                f"Azure DevOps {resp.status_code}: {detail}",
+                request=resp.request,
+                response=resp,
+            )
 
 async def get_work_item_type_states(project: str, work_item_type: str) -> list[str]:
     headers = _get_auth_headers()

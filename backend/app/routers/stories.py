@@ -300,5 +300,10 @@ async def delete_story(item_id: int, current_user: User = Depends(get_current_us
 
     try:
         await ado.delete_work_item(item_id)
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code
+        if 400 <= code < 500:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
