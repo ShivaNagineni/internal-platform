@@ -241,20 +241,23 @@ async def move_story_sprint(
 
 
 @router.post("/", response_model=StoryOut, status_code=status.HTTP_201_CREATED)
-async def create_story(payload: StoryCreate, current_user: User = Depends(require_manager)):
+async def create_story(payload: StoryCreate, current_user: User = Depends(get_current_user)):
+    is_manager_plus = current_user.role in {UserRole.MANAGER, UserRole.ADMIN, UserRole.OWNER}
     projects = await ado.get_configured_projects()
     if payload.project not in projects:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Project '{payload.project}' is not configured.",
         )
+    # Employees can only create stories assigned to themselves
+    assigned_to_email = payload.assigned_to_email if is_manager_plus else current_user.email
     try:
         item = await ado.create_work_item(
             title=payload.title,
             work_item_type=payload.work_item_type,
             project=payload.project,
             description=payload.description,
-            assigned_to_email=payload.assigned_to_email,
+            assigned_to_email=assigned_to_email,
             priority=payload.priority,
         )
     except Exception as exc:

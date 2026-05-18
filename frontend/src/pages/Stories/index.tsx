@@ -1237,15 +1237,13 @@ export default function StoriesPage() {
             <RefreshCw className={cn("w-4 h-4", syncing && "animate-spin")} />
             Sync
           </button>
-          {isManagerPlus && (
-            <button
-              onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              New Work Item
-            </button>
-          )}
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            New Work Item
+          </button>
         </div>
       </div>
 
@@ -1299,6 +1297,8 @@ export default function StoriesPage() {
         story={editingStory}
         onSubmit={handleFormSubmit}
         isLoading={createStory.isPending || updateStory.isPending}
+        isManagerPlus={isManagerPlus}
+        currentUserEmail={currentUser?.email}
       />
 
       {/* Delete confirmation */}
