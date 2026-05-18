@@ -1123,7 +1123,7 @@ function AllItemsView({
             onDelete={onDelete}
             onStateChange={onStateChange}
             statesMap={statesMap}
-            sprintMap={storySprintMap.size > 0 ? storySprintMap : undefined}
+            sprintMap={storySprintMap}
             sprints={sprints}
             onMoveSprint={onMoveSprint}
           />

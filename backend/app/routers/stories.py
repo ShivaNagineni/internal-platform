@@ -116,8 +116,10 @@ async def list_sprints(current_user: User = Depends(get_current_user)):
                 if (s.get("assigned_to") or {}).get("unique_name", "").lower()
                 == current_user.email.lower()
             ]
-            if not raw_stories:
-                continue  # skip sprints that have none of their stories
+            # Only hide past sprints that have no employee stories;
+            # always show current + future so employees can move stories into them
+            if not raw_stories and sprint.get("time_frame") == "past":
+                continue
 
         stories_out = [await _enrich(s) for s in raw_stories]
         result.append(
