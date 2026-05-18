@@ -1264,7 +1264,7 @@ export default function StoriesPage() {
           onDelete={setDeleteTarget}
           onStateChange={handleStateChange}
           statesMap={statesMap}
-          onMoveSprint={isManagerPlus ? handleMoveSprint : undefined}
+          onMoveSprint={handleMoveSprint}
         />
       )}
 

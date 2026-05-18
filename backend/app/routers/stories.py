@@ -209,8 +209,23 @@ async def update_story_state(
 async def move_story_sprint(
     item_id: int,
     payload: StorySprintUpdate,
-    current_user: User = Depends(require_manager),
+    current_user: User = Depends(get_current_user),
 ):
+    is_manager_plus = current_user.role in {UserRole.MANAGER, UserRole.ADMIN, UserRole.OWNER}
+
+    try:
+        item = await ado.get_work_item(item_id)
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
+
+    if item is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Work item not found")
+
+    if not is_manager_plus:
+        assigned = item.get("assigned_to")
+        if not assigned or assigned.get("unique_name", "").lower() != current_user.email.lower():
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only move stories assigned to you")
+
     try:
         updated = await ado.update_work_item(item_id=item_id, iteration_path=payload.sprint_path)
     except httpx.HTTPStatusError as exc:
