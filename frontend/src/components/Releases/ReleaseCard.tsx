@@ -305,28 +305,31 @@ export default function ReleaseCard({
 
       </div>
 
-      <ConfirmDialog
-        open={cancelOpen}
-        onOpenChange={setCancelOpen}
-        variant="warning"
-        title="Cancel release"
-        description={`Are you sure you want to cancel v${release.version} — "${release.title}"? Any open GitHub PRs will be closed.`}
-        confirmLabel="Cancel Release"
-        cancelLabel="Keep it"
-        onConfirm={() => onStatusAdvance && onStatusAdvance(release.id, "CANCELLED")}
-      />
-
-      {onDelete && (
+      {/* Stop clicks from portal dialogs bubbling up to the card onClick */}
+      <div onClick={(e) => e.stopPropagation()}>
         <ConfirmDialog
-          open={deleteOpen}
-          onOpenChange={setDeleteOpen}
-          variant="danger"
-          title="Delete release"
-          description={`Are you sure you want to delete v${release.version} — "${release.title}"? This cannot be undone.`}
-          confirmLabel="Delete"
-          onConfirm={() => onDelete(release.id)}
+          open={cancelOpen}
+          onOpenChange={setCancelOpen}
+          variant="warning"
+          title="Cancel release"
+          description={`Are you sure you want to cancel v${release.version} — "${release.title}"? Any open GitHub PRs will be closed.`}
+          confirmLabel="Cancel Release"
+          cancelLabel="Keep it"
+          onConfirm={() => onStatusAdvance && onStatusAdvance(release.id, "CANCELLED")}
         />
-      )}
+
+        {onDelete && (
+          <ConfirmDialog
+            open={deleteOpen}
+            onOpenChange={setDeleteOpen}
+            variant="danger"
+            title="Delete release"
+            description={`Are you sure you want to delete v${release.version} — "${release.title}"? This cannot be undone.`}
+            confirmLabel="Delete"
+            onConfirm={() => onDelete(release.id)}
+          />
+        )}
+      </div>
     </div>
   );
 }
