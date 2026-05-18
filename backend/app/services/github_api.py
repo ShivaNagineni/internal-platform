@@ -184,6 +184,31 @@ async def create_qa_to_main_pr(
     return created
 
 
+async def close_pr(pr_number: int, github_repo: str | None = None) -> bool:
+    """Close (without merging) a PR via the GitHub API. Returns True on success."""
+    settings = get_settings()
+    repo = _resolve_repo(github_repo)
+    if not settings.github_token or not repo:
+        return False
+
+    headers = {
+        "Authorization": f"Bearer {settings.github_token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.patch(
+            f"{_BASE}/repos/{repo}/pulls/{pr_number}",
+            headers=headers,
+            json={"state": "closed"},
+        )
+        if resp.status_code == 200:
+            logger.info("Closed PR #%s in %s", pr_number, repo)
+            return True
+        logger.error("Failed to close PR #%s in %s: HTTP %s — %s", pr_number, repo, resp.status_code, resp.text)
+        return False
+
+
 async def merge_pr(pr_number: int, github_repo: str | None = None) -> bool:
     """Merge a PR via the GitHub API. Returns True on success."""
     settings = get_settings()

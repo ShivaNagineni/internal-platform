@@ -76,6 +76,7 @@ export default function ReleaseCard({
   onClick,
 }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const canManage = currentUserRole === "MANAGER" || currentUserRole === "ADMIN" || currentUserRole === "OWNER";
   const isCancelled = release.status === "CANCELLED";
   const currentIndex = getPipelineStepIndex(release.status);
@@ -101,9 +102,7 @@ export default function ReleaseCard({
 
   function handleCancel(e: React.MouseEvent) {
     e.stopPropagation();
-    if (onStatusAdvance) {
-      onStatusAdvance(release.id, "CANCELLED");
-    }
+    setCancelOpen(true);
   }
 
   function handleDelete(e: React.MouseEvent) {
@@ -305,6 +304,17 @@ export default function ReleaseCard({
         )}
 
       </div>
+
+      <ConfirmDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        variant="warning"
+        title="Cancel release"
+        description={`Are you sure you want to cancel v${release.version} — "${release.title}"? Any open GitHub PRs will be closed.`}
+        confirmLabel="Cancel Release"
+        cancelLabel="Keep it"
+        onConfirm={() => onStatusAdvance && onStatusAdvance(release.id, "CANCELLED")}
+      />
 
       {onDelete && (
         <ConfirmDialog

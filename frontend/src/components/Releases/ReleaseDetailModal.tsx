@@ -1,8 +1,10 @@
+import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Calendar, User, Clock, ChevronRight, Ban } from "lucide-react";
 import type { Release, ReleaseStatus, UserRole } from "@/types";
 import { cn, formatDate, formatDateTime, getInitials } from "@/lib/utils";
 import StatusBadge from "@/components/StatusBadge";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 // ─── Pipeline step config ─────────────────────────────────────────────────────
 
@@ -145,6 +147,7 @@ export default function ReleaseDetailModal({
 }: Props) {
   if (!release) return null;
 
+  const [cancelOpen, setCancelOpen] = useState(false);
   const canManage = currentUserRole === "MANAGER" || currentUserRole === "ADMIN" || currentUserRole === "OWNER";
   const isCancelled = release.status === "CANCELLED";
   const isTerminal = release.status === "RELEASED" || isCancelled;
@@ -166,8 +169,7 @@ export default function ReleaseDetailModal({
   }
 
   function handleCancel() {
-    onStatusChange(release.id, "CANCELLED");
-    onOpenChange(false);
+    setCancelOpen(true);
   }
 
   return (
@@ -331,6 +333,20 @@ export default function ReleaseDetailModal({
 
         </Dialog.Content>
       </Dialog.Portal>
+
+      <ConfirmDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        variant="warning"
+        title="Cancel release"
+        description={`Are you sure you want to cancel v${release.version} — "${release.title}"? Any open GitHub PRs will be closed.`}
+        confirmLabel="Cancel Release"
+        cancelLabel="Keep it"
+        onConfirm={() => {
+          onStatusChange(release.id, "CANCELLED");
+          onOpenChange(false);
+        }}
+      />
     </Dialog.Root>
   );
 }
