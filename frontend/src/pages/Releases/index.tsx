@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type { Release, ReleaseStatus, UserRole } from "@/types";
 import { cn } from "@/lib/utils";
-import { useReleases, useUpdateRelease, useDeployRelease, useApproveRelease } from "@/hooks/useReleases";
+import { useReleases, useUpdateRelease, useDeployRelease, useApproveRelease, useDeleteRelease } from "@/hooks/useReleases";
 import ReleaseCard from "@/components/Releases/ReleaseCard";
 import ReleaseDetailModal from "@/components/Releases/ReleaseDetailModal";
 import ReleaseForm from "@/components/Releases/ReleaseForm";
@@ -31,6 +31,8 @@ interface Column {
   headerText: string;
   countBg: string;
   emptyText: string;
+  emptyHint: string;
+  emptyEmoji: string;
 }
 
 const COLUMNS: Column[] = [
@@ -41,6 +43,8 @@ const COLUMNS: Column[] = [
     headerText: "text-slate-700 dark:text-slate-200",
     countBg: "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300",
     emptyText: "No planned releases",
+    emptyHint: "Click 'Plan Release' to queue your next deployment.",
+    emptyEmoji: "📅",
   },
   {
     status: "STAGING",
@@ -49,6 +53,8 @@ const COLUMNS: Column[] = [
     headerText: "text-purple-700 dark:text-purple-300",
     countBg: "bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-300",
     emptyText: "Nothing in QA",
+    emptyHint: "Approve a planned release to start staging.",
+    emptyEmoji: "🧪",
   },
   {
     status: "IN_PROGRESS",
@@ -56,7 +62,9 @@ const COLUMNS: Column[] = [
     headerBg: "bg-indigo-50 dark:bg-indigo-950/50",
     headerText: "text-indigo-700 dark:text-indigo-300",
     countBg: "bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-300",
-    emptyText: "Nothing releasing",
+    emptyText: "Nothing deploying",
+    emptyHint: "Releases under active deployment appear here.",
+    emptyEmoji: "🚀",
   },
   {
     status: "RELEASED",
@@ -64,7 +72,9 @@ const COLUMNS: Column[] = [
     headerBg: "bg-emerald-50 dark:bg-emerald-950/50",
     headerText: "text-emerald-700 dark:text-emerald-300",
     countBg: "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-300",
-    emptyText: "No releases yet",
+    emptyText: "No shipped releases yet",
+    emptyHint: "Successfully deployed versions will appear here.",
+    emptyEmoji: "🎉",
   },
   {
     status: "CANCELLED",
@@ -73,6 +83,8 @@ const COLUMNS: Column[] = [
     headerText: "text-rose-700 dark:text-rose-300",
     countBg: "bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-300",
     emptyText: "No cancellations",
+    emptyHint: "All clear — nothing has been called off.",
+    emptyEmoji: "✅",
   },
 ];
 
@@ -171,6 +183,7 @@ interface StatusRowProps {
   onStatusAdvance: (id: string, status: ReleaseStatus) => void;
   onDeploy: (id: string) => void;
   onApproveRelease: (id: string) => void;
+  onDelete: (id: string) => void;
   onClick: (release: Release) => void;
 }
 
@@ -182,6 +195,7 @@ function StatusRow({
   onStatusAdvance,
   onDeploy,
   onApproveRelease,
+  onDelete,
   onClick,
 }: StatusRowProps) {
   return (
@@ -209,8 +223,12 @@ function StatusRow({
       {/* Cards in horizontal line */}
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
         {releases.length === 0 ? (
-          <div className="w-full py-10 text-center text-xs text-slate-400 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-            {column.emptyText}
+          <div className="w-full py-10 flex flex-col items-center gap-2.5 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/60 dark:bg-slate-800/20 px-6 text-center">
+            <span className="text-3xl opacity-60">{column.emptyEmoji}</span>
+            <div>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{column.emptyText}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 max-w-[220px]">{column.emptyHint}</p>
+            </div>
           </div>
         ) : (
           releases.map((release) => (
@@ -222,6 +240,7 @@ function StatusRow({
                 onStatusAdvance={onStatusAdvance}
                 onDeploy={onDeploy}
                 onApproveRelease={onApproveRelease}
+                onDelete={onDelete}
                 onClick={onClick}
               />
             </div>
@@ -243,6 +262,7 @@ export default function ReleasesPage() {
   const updateRelease = useUpdateRelease();
   const deployRelease = useDeployRelease();
   const approveRelease = useApproveRelease();
+  const deleteRelease = useDeleteRelease();
 
   // UI state
   const [viewMode, setViewMode] = useState<ViewMode>("pipeline");
@@ -279,6 +299,10 @@ export default function ReleasesPage() {
 
   function handleApproveRelease(id: string) {
     approveRelease.mutate(id);
+  }
+
+  function handleDelete(id: string) {
+    deleteRelease.mutate(id);
   }
 
   // ─── Derived data ────────────────────────────────────────────────────────────
@@ -451,6 +475,7 @@ export default function ReleasesPage() {
                   onStatusAdvance={handleStatusChange}
                   onDeploy={handleDeploy}
                   onApproveRelease={handleApproveRelease}
+                  onDelete={handleDelete}
                   onClick={handleCardClick}
                 />
               ))}

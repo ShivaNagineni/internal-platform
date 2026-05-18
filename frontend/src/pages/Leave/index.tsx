@@ -15,8 +15,24 @@ import {
   CheckCircle2,
   CalendarCheck2,
   Laptop,
+  LayoutList,
+  CalendarRange,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { format, parseISO, isThisMonth } from "date-fns";
+import {
+  format,
+  parseISO,
+  isThisMonth,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  getDay,
+  isSameDay,
+  addMonths,
+  subMonths,
+  isWeekend,
+} from "date-fns";
 import { cn } from "@/lib/utils";
 import { useLeaves, useUpdateLeave, useDeleteLeave, useWhoIsOut } from "@/hooks/useLeave";
 import LeaveCard from "@/components/Leave/LeaveCard";
@@ -298,6 +314,144 @@ function StatsStrip({ leaves, currentUserId, currentUserEmail }: StatsStripProps
   );
 }
 
+// ─── Leave Calendar ───────────────────────────────────────────────────────────
+
+const STATUS_CHIP_COLORS: Record<string, string> = {
+  PENDING: "bg-amber-400 dark:bg-amber-500 text-white",
+  APPROVED: "bg-emerald-400 dark:bg-emerald-500 text-white",
+  REJECTED: "bg-rose-400 dark:bg-rose-500 text-white",
+  CANCELLED: "bg-slate-300 dark:bg-slate-600 text-slate-700 dark:text-slate-200",
+};
+
+const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+interface LeaveCalendarProps {
+  leaves: Leave[];
+}
+
+function LeaveCalendar({ leaves }: LeaveCalendarProps) {
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const startPad = getDay(monthStart);
+
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  function getLeavesForDay(day: Date): Leave[] {
+    return leaves.filter((leave) => {
+      const start = parseISO(leave.start_date + "T00:00:00");
+      const end = parseISO(leave.end_date + "T00:00:00");
+      return day >= start && day <= end;
+    });
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      {/* Month nav */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
+        <button
+          onClick={() => setCurrentMonth((prev) => subMonths(prev, 1))}
+          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors duration-150"
+          aria-label="Previous month"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <h3 className="text-sm font-semibold text-slate-800 dark:text-white">
+          {format(currentMonth, "MMMM yyyy")}
+        </h3>
+        <button
+          onClick={() => setCurrentMonth((prev) => addMonths(prev, 1))}
+          className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors duration-150"
+          aria-label="Next month"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Day-of-week headers */}
+      <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30">
+        {DAY_HEADERS.map((d) => (
+          <div key={d} className="py-2 text-center text-[11px] font-semibold text-slate-400 dark:text-slate-500 tracking-wide">
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-7 divide-x divide-y divide-slate-100 dark:divide-slate-800">
+        {Array.from({ length: startPad }).map((_, i) => (
+          <div key={`pad-${i}`} className="min-h-[88px] bg-slate-50/40 dark:bg-slate-800/10" />
+        ))}
+
+        {days.map((day) => {
+          const dayLeaves = getLeavesForDay(day);
+          const isToday = isSameDay(day, today);
+          const isWknd = isWeekend(day);
+
+          return (
+            <div
+              key={day.toISOString()}
+              className={cn(
+                "min-h-[88px] p-1.5 space-y-1 text-left",
+                isWknd ? "bg-slate-50/60 dark:bg-slate-800/20" : "bg-white dark:bg-slate-900",
+              )}
+            >
+              <span
+                className={cn(
+                  "inline-flex w-6 h-6 items-center justify-center rounded-full text-[11px] font-semibold leading-none",
+                  isToday
+                    ? "bg-indigo-600 text-white"
+                    : isWknd
+                    ? "text-slate-400 dark:text-slate-500"
+                    : "text-slate-600 dark:text-slate-300",
+                )}
+              >
+                {format(day, "d")}
+              </span>
+
+              <div className="space-y-0.5">
+                {dayLeaves.slice(0, 3).map((leave) => (
+                  <div
+                    key={leave.id}
+                    title={`${leave.user.display_name} — ${leave.leave_type} (${leave.status})`}
+                    className={cn(
+                      "text-[10px] font-medium px-1.5 py-[2px] rounded truncate leading-tight cursor-default",
+                      STATUS_CHIP_COLORS[leave.status] ?? "bg-slate-200 text-slate-700",
+                    )}
+                  >
+                    {leave.user.display_name.split(" ")[0]}
+                  </div>
+                ))}
+                {dayLeaves.length > 3 && (
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 px-1 font-medium">
+                    +{dayLeaves.length - 3} more
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-4 flex-wrap bg-slate-50/60 dark:bg-slate-800/20">
+        {(["PENDING", "APPROVED", "REJECTED", "CANCELLED"] as const).map((status) => (
+          <div key={status} className="flex items-center gap-1.5">
+            <div className={cn("w-2.5 h-2.5 rounded-sm", STATUS_CHIP_COLORS[status])} />
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 capitalize">{status.toLowerCase()}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Empty State ─────────────────────────────────────────────────────────────
 
 interface EmptyStateProps {
@@ -384,6 +538,7 @@ export default function LeavePage() {
   const [requestOpen, setRequestOpen] = useState(false);
   const [editLeaveData, setEditLeaveData] = useState<Leave | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterTab>("ALL");
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [approvalModal, setApprovalModal] = useState<{
     open: boolean;
     action: "approve" | "reject";
@@ -483,38 +638,68 @@ export default function LeavePage() {
         <div className="flex gap-5 items-start">
           {/* Left column: tabs + cards */}
           <div className="flex-1 min-w-0 space-y-4">
-            {/* ── Filter tabs ── */}
-            <div className="flex items-center gap-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-1 overflow-x-auto scrollbar-hide">
-              {FILTER_TABS.map(({ key, label }) => {
-                const count = tabCounts[key] ?? 0;
-                const isActive = activeFilter === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setActiveFilter(key)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-indigo-400",
-                      isActive
-                        ? "bg-indigo-600 text-white shadow-sm"
-                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white",
-                    )}
-                  >
-                    {label}
-                    {count > 0 && (
-                      <span
-                        className={cn(
-                          "inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1",
-                          isActive
-                            ? "bg-white/20 text-white"
-                            : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
-                        )}
-                      >
-                        {count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+            {/* ── Filter tabs + view toggle ── */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-1 overflow-x-auto scrollbar-hide min-w-0">
+                {FILTER_TABS.map(({ key, label }) => {
+                  const count = tabCounts[key] ?? 0;
+                  const isActive = activeFilter === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setActiveFilter(key)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-indigo-400",
+                        isActive
+                          ? "bg-indigo-600 text-white shadow-sm"
+                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white",
+                      )}
+                    >
+                      {label}
+                      {count > 0 && (
+                        <span
+                          className={cn(
+                            "inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1",
+                            isActive
+                              ? "bg-white/20 text-white"
+                              : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
+                          )}
+                        >
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* View mode toggle */}
+              <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-1 flex-shrink-0">
+                <button
+                  onClick={() => setViewMode("list")}
+                  title="List view"
+                  className={cn(
+                    "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400",
+                    viewMode === "list"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white",
+                  )}
+                >
+                  <LayoutList className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setViewMode("calendar")}
+                  title="Calendar view"
+                  className={cn(
+                    "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-400",
+                    viewMode === "calendar"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white",
+                  )}
+                >
+                  <CalendarRange className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
             {/* ── Error state ── */}
@@ -547,8 +732,12 @@ export default function LeavePage() {
               </div>
             )}
 
-            {/* ── Leave cards grid ── */}
-            {!isLoading && !isError && (
+            {/* ── Leave content (list or calendar) ── */}
+            {!isLoading && !isError && viewMode === "calendar" && (
+              <LeaveCalendar leaves={filteredLeaves} />
+            )}
+
+            {!isLoading && !isError && viewMode === "list" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredLeaves.length === 0 ? (
                   <EmptyState filter={activeFilter} onRequestLeave={() => setRequestOpen(true)} />

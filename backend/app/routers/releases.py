@@ -106,6 +106,14 @@ async def create_release(
                     detail=f"Repository not found: {repo_id}",
                 )
 
+    from app.services.github_api import create_dev_to_qa_pr, has_commits_ahead
+
+    if repositories:
+        for repo in repositories:
+            ok, err = await has_commits_ahead(repo.github_repo, repo.dev_branch, repo.qa_branch)
+            if not ok:
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=err)
+
     now = datetime.now(UTC)
     release = Release(
         title=payload.title,
@@ -120,8 +128,6 @@ async def create_release(
         main_pr_numbers={},
     )
     await release.insert()
-
-    from app.services.github_api import create_dev_to_qa_pr
 
     if repositories:
         for repo in repositories:
@@ -346,10 +352,18 @@ async def approve_release(
 @router.delete("/{release_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_release(
     release_id: uuid.UUID,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager),
 ):
     release = await Release.get(release_id)
     if release is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Release not found")
+
+    is_admin = current_user.role in {UserRole.ADMIN, UserRole.OWNER}
+    if not is_admin:
+        if release.status != ReleaseStatus.PLANNED:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Admins or Owners can delete releases that are not in PLANNED status",
+            )
 
     await release.delete()
