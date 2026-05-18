@@ -253,7 +253,7 @@ export default function StoryFormModal({
                     .filter(s => s.project === project && s.time_frame !== "past")
                     .map(s => (
                       <option key={s.id} value={s.path}>
-                        {s.name}{s.time_frame === "current" ? " (active)" : ""}
+                        {s.name}{s.time_frame === "current" ? " (current)" : ""}
                       </option>
                     ))}
                 </select>

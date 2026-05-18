@@ -488,7 +488,7 @@ function SprintMoveSelect({
                     <span className="text-[10px] text-violet-400 shrink-0">current</span>
                   )}
                   {sprint.time_frame === "current" && sprint.name !== currentSprintName && (
-                    <span className="text-[10px] text-indigo-400 shrink-0">active</span>
+                    <span className="text-[10px] text-indigo-400 shrink-0">current</span>
                   )}
                 </div>
               ))
