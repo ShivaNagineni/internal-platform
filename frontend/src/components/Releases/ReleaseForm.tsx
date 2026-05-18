@@ -303,8 +303,8 @@ export default function ReleaseForm({ open, onOpenChange, release }: Props) {
       }
       onOpenChange(false);
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      const axiosDetail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      const msg = axiosDetail ?? (err instanceof Error ? err.message : "Something went wrong. Please try again.");
       setErrors({ global: msg });
     }
   }

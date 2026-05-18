@@ -371,11 +371,6 @@ export default function ReleasesPage() {
     });
   }, [releases, statusFilter, dateRange]);
 
-  const displayedColumns = useMemo(() => {
-    if (statusFilter === "ALL") return COLUMNS;
-    return COLUMNS.filter((col) => col.status === statusFilter);
-  }, [statusFilter]);
-
   const releasesByStatus = useMemo<Record<ReleaseStatus, Release[]>>(() => {
     const grouped: Record<ReleaseStatus, Release[]> = {
       PLANNED: [],
@@ -389,6 +384,14 @@ export default function ReleasesPage() {
     });
     return grouped;
   }, [filteredReleases]);
+
+  const displayedColumns = useMemo(() => {
+    const base = statusFilter === "ALL" ? COLUMNS : COLUMNS.filter((col) => col.status === statusFilter);
+    if (dateFilter !== "ALL") {
+      return base.filter((col) => releasesByStatus[col.status].length > 0);
+    }
+    return base;
+  }, [statusFilter, dateFilter, releasesByStatus]);
 
   // Stats
   const activeCount = releases.filter(
