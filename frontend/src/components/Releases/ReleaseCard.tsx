@@ -1,4 +1,4 @@
-import { Edit, ChevronRight, User, Trash2 } from "lucide-react";
+import { Edit, ChevronRight, User, Trash2, GitBranch } from "lucide-react";
 import type { Release, ReleaseStatus, UserRole } from "@/types";
 import { cn, formatDate, getInitials } from "@/lib/utils";
 import StatusBadge from "@/components/StatusBadge";
@@ -155,6 +155,27 @@ export default function ReleaseCard({
           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
             {release.description}
           </p>
+        )}
+
+        {/* Repo chips */}
+        {release.repositories && release.repositories.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <GitBranch className="w-3 h-3 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+            {release.repositories.slice(0, 2).map((repo) => (
+              <span
+                key={repo.id}
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 truncate max-w-[120px]"
+                title={repo.name}
+              >
+                {repo.name}
+              </span>
+            ))}
+            {release.repositories.length > 2 && (
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                +{release.repositories.length - 2} more
+              </span>
+            )}
+          </div>
         )}
 
         {/* Owner + date row */}
