@@ -494,8 +494,8 @@ export default function ReleasesPage() {
           </button>
         </div>
 
-        {/* Filter dropdowns */}
-        <div className="flex items-center gap-2">
+        {/* Filter dropdowns — only relevant for pipeline view */}
+        {viewMode === "pipeline" && <div className="flex items-center gap-2">
           <FilterSelect
             value={statusFilter}
             onChange={setStatusFilter}
@@ -517,7 +517,7 @@ export default function ReleasesPage() {
               Reset
             </button>
           )}
-        </div>
+        </div>}
       </div>
 
       {/* ── Pipeline view ─────────────────────────────────────────────────── */}
