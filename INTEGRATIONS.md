@@ -1,6 +1,6 @@
 # Integration Setup Guide
 
-This document covers how to create and configure the Slack, GitHub, and Zoho integrations used by Internal Platform for release automation, notifications, and authentication.
+This document covers how to create and configure the Slack, GitHub, Zoho, and Azure DevOps integrations used by Internal Platform for release automation, notifications, authentication, and work item tracking.
 
 ---
 
@@ -10,8 +10,9 @@ This document covers how to create and configure the Slack, GitHub, and Zoho int
 2. [GitHub Personal Access Token](#2-github-personal-access-token)
 3. [GitHub Webhook](#3-github-webhook)
 4. [Zoho OAuth Setup](#4-zoho-oauth-setup)
-5. [Environment Variables Reference](#5-environment-variables-reference)
-6. [Local Development (ngrok)](#6-local-development-ngrok)
+5. [Azure DevOps Stories](#5-azure-devops-stories)
+6. [Environment Variables Reference](#6-environment-variables-reference)
+7. [Local Development (ngrok)](#7-local-development-ngrok)
 
 ---
 
@@ -259,7 +260,121 @@ When a Zoho user signs in for the first time:
 
 ---
 
-## 5. Environment Variables Reference
+## 5. Azure DevOps Stories
+
+The platform pulls work items (User Stories, Tasks, Bugs) and sprint data directly from Azure DevOps using a Personal Access Token scoped to your organisation.
+
+### 5.1 What it does
+
+| Feature | Details |
+|---|---|
+| Work items | Lists User Stories, Tasks, and Bugs from one or more projects |
+| Sprints | Shows current sprint prominently, past sprints collapsible |
+| Role access | MANAGER / ADMIN / OWNER see all items; EMPLOYEE sees only their own |
+| CRUD | MANAGER+ can create, edit, and delete work items from the platform |
+
+### 5.2 Find your Organisation and Project names
+
+1. Go to **https://dev.azure.com** and sign in with your work account.
+2. Your **organisation name** appears in the URL: `https://dev.azure.com/{OrgName}`.
+3. On the organisation home page you will see a list of projects — note the exact names (case-sensitive).
+
+Example: `https://dev.azure.com/TekYantra` → org is `TekYantra`, projects are `KosmicEye` and `ROCON Infra`.
+
+### 5.3 Create a Personal Access Token (PAT)
+
+A PAT lets the backend read and write work items on behalf of your user account. No org-admin access is required.
+
+1. Go to `https://dev.azure.com/{YourOrg}/_usersSettings/tokens`  
+   (or click your profile icon → **Personal access tokens**).
+2. Click **New Token**.
+3. Fill in the form:
+
+   | Field | Value |
+   |---|---|
+   | **Name** | `internal-platform` |
+   | **Organization** | Your org (e.g. `TekYantra`) |
+   | **Expiration** | 1 year (add a calendar reminder to rotate) |
+   | **Scopes** | Custom defined |
+
+4. Under **Custom defined** enable exactly these scopes:
+
+   | Scope | Permission |
+   |---|---|
+   | **Work Items** | Read & write |
+   | **Wiki** | Read & write |
+   | **Project and Team** | Read (click "Show all scopes" to find it) |
+
+5. Click **Create** and **copy the token immediately** — Azure only shows it once.
+6. Set it in `backend/.env`:
+   ```env
+   AZURE_DEVOPS_PAT=your-token-here
+   ```
+
+### 5.4 Configure environment variables
+
+Add all four variables to `backend/.env`:
+
+```env
+# ── Azure DevOps ──────────────────────────────────────────────────────────────
+AZURE_DEVOPS_ORG=TekYantra
+AZURE_DEVOPS_PROJECTS=["KosmicEye","ROCON Infra"]
+AZURE_DEVOPS_TEAM=                        # optional — see 5.5
+AZURE_DEVOPS_PAT=your-pat-here
+```
+
+`AZURE_DEVOPS_PROJECTS` accepts a JSON array of project names. Use exact casing as shown in Azure DevOps.
+
+### 5.5 Team name (optional)
+
+The iterations (sprint) endpoint requires a team name. If `AZURE_DEVOPS_TEAM` is left blank, the API uses each project's **default team**, which is usually correct.
+
+If sprints fail to load (404 error in the backend logs), find the exact team name:
+
+1. Go to `https://dev.azure.com/{Org}/{Project}/_settings/teams`.
+2. Copy the name of the team that owns the sprints (e.g. `KosmicEye Team`).
+3. Set `AZURE_DEVOPS_TEAM=KosmicEye Team` in `.env`.
+
+Note: if your two projects use different team names you can only set one here. Leave it blank and both projects' default teams will be used automatically.
+
+### 5.6 Verify the connection
+
+A diagnostic script is included to test every step before starting the backend:
+
+```bash
+cd backend
+python3 test_devops.py
+```
+
+It checks:
+1. All required env vars are present
+2. Organisation is reachable with the PAT
+3. Each configured project exists and WIQL queries work
+4. The iterations (sprints) endpoint returns data
+
+All lines should show ✅. If any show ⚠️ or ❌ the script prints the exact fix needed.
+
+### 5.7 Rotating the PAT
+
+PATs expire. When the token expires work items and sprints will stop loading.
+
+1. Go to `https://dev.azure.com/{YourOrg}/_usersSettings/tokens`.
+2. Find the token and click **Regenerate** (or create a new one following 5.3).
+3. Update `AZURE_DEVOPS_PAT` in `backend/.env`.
+4. Restart the backend (`get_settings()` is cached and picks up the new value on restart).
+
+### 5.8 Summary of values to collect
+
+| `.env` variable | Where to find it |
+|---|---|
+| `AZURE_DEVOPS_ORG` | URL: `https://dev.azure.com/{OrgName}` |
+| `AZURE_DEVOPS_PROJECTS` | Organisation home page — project list (exact names, case-sensitive) |
+| `AZURE_DEVOPS_PAT` | Profile → Personal access tokens → New Token |
+| `AZURE_DEVOPS_TEAM` | Optional — `{Project}/_settings/teams` if sprints return 404 |
+
+---
+
+## 6. Environment Variables Reference
 
 All variables live in `backend/.env`. Copy `backend/.env.example` as a starting point.
 
@@ -272,6 +387,12 @@ DB_NAME=internal_app
 AZURE_AD_TENANT_ID=your-tenant-id
 AZURE_AD_CLIENT_ID=your-client-id
 AZURE_AD_CLIENT_SECRET=your-client-secret
+
+# ── Azure DevOps (work items & sprints) ───────────────────────────────────────
+AZURE_DEVOPS_ORG=TekYantra
+AZURE_DEVOPS_PROJECTS=["KosmicEye","ROCON Infra"]
+AZURE_DEVOPS_TEAM=                   # optional — leave blank to use each project's default team
+AZURE_DEVOPS_PAT=your-pat-here       # Personal Access Token (Work Items R/W + Wiki R/W + Project and Team R)
 
 # ── Zoho OAuth (authentication) ───────────────────────────────────────────────
 ZOHO_CLIENT_ID=1000.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -293,7 +414,7 @@ SECRET_KEY=change-me-in-production   # Used to sign Zoho session JWTs
 
 ---
 
-## 6. Local Development (ngrok)
+## 7. Local Development (ngrok)
 
 Both the GitHub webhook and Slack interactivity need a **publicly reachable URL** to call back into your laptop. ngrok creates a secure tunnel.
 
@@ -355,6 +476,13 @@ Zoho
   [ ] Client ID copied → ZOHO_CLIENT_ID
   [ ] Client Secret copied → ZOHO_CLIENT_SECRET
   [ ] Redirect URI set to /auth/zoho/callback → ZOHO_REDIRECT_URI
+
+Azure DevOps
+  [ ] Organisation name confirmed from dev.azure.com URL → AZURE_DEVOPS_ORG
+  [ ] Project names noted (exact case) → AZURE_DEVOPS_PROJECTS
+  [ ] PAT created with Work Items R/W + Wiki R/W + Project and Team R → AZURE_DEVOPS_PAT
+  [ ] AZURE_DEVOPS_TEAM set if sprints return 404 (optional)
+  [ ] Verified with: cd backend && python3 test_devops.py
 
 Local dev
   [ ] ngrok running on port 8000
