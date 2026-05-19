@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, ChevronDown } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import type { Sprint, Story, StoryCreate, StoryUpdate, User, WorkItemType } from "@/types";
 
@@ -20,6 +20,7 @@ interface StoryFormModalProps {
   users: User[];
   projects: string[];
   sprints?: Sprint[];
+  stories?: Story[];
   story?: Story | null;
   onSubmit: (data: StoryCreate | StoryUpdate) => Promise<void>;
   isLoading: boolean;
@@ -33,6 +34,7 @@ export default function StoryFormModal({
   users,
   projects,
   sprints = [],
+  stories = [],
   story,
   onSubmit,
   isLoading,
@@ -48,6 +50,20 @@ export default function StoryFormModal({
   const [assigneeEmail, setAssigneeEmail] = useState("");
   const [priority, setPriority] = useState<string>("");
   const [sprintPath, setSprintPath] = useState("");
+  const [parentId, setParentId] = useState<string>("");
+  const [parentOpen, setParentOpen] = useState(false);
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!parentOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (parentRef.current && !parentRef.current.contains(e.target as Node)) {
+        setParentOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [parentOpen]);
 
   useEffect(() => {
     if (open) {
@@ -59,17 +75,15 @@ export default function StoryFormModal({
         setAssigneeEmail(story.assigned_to?.unique_name ?? "");
         setPriority(story.priority?.toString() ?? "");
       } else {
-        const defaultProject = projects[0] ?? "";
         setTitle("");
         setDescription("");
-        setProject(defaultProject);
+        setProject(projects[0] ?? "");
         setWorkItemType("User Story");
         setAssigneeEmail("");
         setPriority("");
-        const currentSprint = sprints.find(
-          (s) => s.project === defaultProject && s.time_frame === "current"
-        );
-        setSprintPath(currentSprint?.path ?? "");
+        setSprintPath("");
+        setParentId("");
+        setParentOpen(false);
       }
     }
   }, [open, story, projects]);
@@ -98,6 +112,7 @@ export default function StoryFormModal({
       if (assigneeEmail) payload.assigned_to_email = assigneeEmail;
       if (priority) payload.priority = Number(priority);
       if (sprintPath) payload.sprint_path = sprintPath;
+      if (parentId) payload.parent_id = Number(parentId);
       await onSubmit(payload);
     }
 
@@ -143,12 +158,7 @@ export default function StoryFormModal({
                 </label>
                 <select
                   value={project}
-                  onChange={(e) => {
-                    const p = e.target.value;
-                    setProject(p);
-                    const cur = sprints.find(s => s.project === p && s.time_frame === "current");
-                    setSprintPath(cur?.path ?? "");
-                  }}
+                  onChange={(e) => { setProject(e.target.value); setSprintPath(""); }}
                   disabled={isEdit}
                   required
                   className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50"
@@ -181,6 +191,62 @@ export default function StoryFormModal({
                 )}
               </div>
             </div>
+
+            {/* Parent User Story — only for Task/Bug when creating */}
+            {!isEdit && workItemType !== "User Story" && (() => {
+              const parentStories = stories.filter((s) => s.project === project && s.work_item_type === "User Story");
+              const selectedParent = parentStories.find((s) => String(s.id) === parentId);
+              return (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+                    Parent User Story
+                  </label>
+                  <div ref={parentRef} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setParentOpen((o) => !o)}
+                      className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 flex items-center justify-between gap-2 text-left"
+                    >
+                      <span className={cn("truncate", !selectedParent && "text-slate-400")}>
+                        {selectedParent ? `#${selectedParent.id} ${selectedParent.title}` : "— None —"}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    </button>
+                    {parentOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        <button
+                          type="button"
+                          onClick={() => { setParentId(""); setParentOpen(false); }}
+                          className={cn(
+                            "w-full px-3 py-2 text-sm text-left text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 first:rounded-t-xl",
+                            !parentId && "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400"
+                          )}
+                        >
+                          — None —
+                        </button>
+                        {parentStories.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => { setParentId(String(s.id)); setParentOpen(false); }}
+                            className={cn(
+                              "w-full px-3 py-2 text-sm text-left text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 last:rounded-b-xl",
+                              String(s.id) === parentId && "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400"
+                            )}
+                          >
+                            <span className="text-slate-400 mr-1">#{s.id}</span>
+                            {s.title}
+                          </button>
+                        ))}
+                        {parentStories.length === 0 && (
+                          <p className="px-3 py-2 text-sm text-slate-400">No user stories in this project</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Priority + Assignee row */}
             <div className="grid grid-cols-2 gap-4">

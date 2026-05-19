@@ -260,6 +260,7 @@ async def create_story(payload: StoryCreate, current_user: User = Depends(get_cu
             assigned_to_email=assigned_to_email,
             priority=payload.priority,
             iteration_path=payload.sprint_path,
+            parent_id=payload.parent_id,
         )
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))

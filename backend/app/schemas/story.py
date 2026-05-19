@@ -40,6 +40,7 @@ class StoryCreate(BaseModel):
     assigned_to_email: str | None = None
     priority: int | None = Field(None, ge=1, le=4)
     sprint_path: str | None = None
+    parent_id: int | None = None
 
 
 class StoryUpdate(BaseModel):

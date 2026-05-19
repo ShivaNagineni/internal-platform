@@ -42,7 +42,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.routers import leave, ideas, releases, stats, users, notifications, webhooks, auth, departments, repositories, stories  # noqa: E402
+from app.routers import leave, ideas, releases, stats, users, notifications, webhooks, auth, departments, repositories, stories, wiki  # noqa: E402
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(leave.router, prefix="/api")
@@ -54,6 +54,7 @@ app.include_router(notifications.router, prefix="/api")
 app.include_router(departments.router, prefix="/api")
 app.include_router(repositories.router, prefix="/api")
 app.include_router(stories.router, prefix="/api")
+app.include_router(wiki.router, prefix="/api")
 app.include_router(webhooks.router)
 
 

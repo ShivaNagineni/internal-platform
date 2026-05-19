@@ -203,6 +203,7 @@ async def create_work_item(
     assigned_to_email: str | None = None,
     priority: int | None = None,
     iteration_path: str | None = None,
+    parent_id: int | None = None,
 ) -> dict:
     encoded_type = urllib.parse.quote(work_item_type)
     base = _project_url(project)
@@ -216,6 +217,10 @@ async def create_work_item(
         patch.append({"op": "add", "path": "/fields/Microsoft.VSTS.Common.Priority", "value": priority})
     if iteration_path:
         patch.append({"op": "add", "path": "/fields/System.IterationPath", "value": iteration_path})
+    if parent_id is not None:
+        s = get_settings()
+        parent_url = f"https://dev.azure.com/{s.azure_devops_org}/{urllib.parse.quote(project)}/_apis/wit/workitems/{parent_id}"
+        patch.append({"op": "add", "path": "/relations/-", "value": {"rel": "System.LinkTypes.Hierarchy-Reverse", "url": parent_url}})
 
     headers = {**_get_auth_headers(), "Content-Type": "application/json-patch+json"}
     async with httpx.AsyncClient(timeout=30) as client:

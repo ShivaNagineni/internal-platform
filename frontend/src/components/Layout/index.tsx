@@ -16,6 +16,7 @@ import {
   Sun,
   Moon,
   ClipboardList,
+  BookOpen,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import * as Tooltip from "@radix-ui/react-tooltip";
@@ -37,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Innovation Hub", to: "/ideas", icon: Lightbulb },
   { label: "Release Control", to: "/releases", icon: Rocket },
   { label: "Azure Stories", to: "/stories", icon: ClipboardList },
+  { label: "Wiki", to: "/wiki", icon: BookOpen },
   { label: "Team Members", to: "/users", icon: Users },
   // { label: "Departments", to: "/departments", icon: Building2 },
 ];
@@ -54,6 +56,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/ideas": "Innovation Hub",
   "/releases": "Release Control",
   "/stories": "Azure Stories",
+  "/wiki": "Wiki",
   "/users": "Team Members",
   "/departments": "Departments",
 };

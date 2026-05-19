@@ -302,6 +302,7 @@ A PAT lets the backend read and write work items on behalf of your user account.
    | Scope | Permission |
    |---|---|
    | **Work Items** | Read & write |
+   | **Wiki** | Read & write |
    | **Project and Team** | Read (click "Show all scopes" to find it) |
 
 5. Click **Create** and **copy the token immediately** — Azure only shows it once.
@@ -391,7 +392,7 @@ AZURE_AD_CLIENT_SECRET=your-client-secret
 AZURE_DEVOPS_ORG=TekYantra
 AZURE_DEVOPS_PROJECTS=["KosmicEye","ROCON Infra"]
 AZURE_DEVOPS_TEAM=                   # optional — leave blank to use each project's default team
-AZURE_DEVOPS_PAT=your-pat-here       # Personal Access Token (Work Items R/W + Project and Team R)
+AZURE_DEVOPS_PAT=your-pat-here       # Personal Access Token (Work Items R/W + Wiki R/W + Project and Team R)
 
 # ── Zoho OAuth (authentication) ───────────────────────────────────────────────
 ZOHO_CLIENT_ID=1000.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -479,7 +480,7 @@ Zoho
 Azure DevOps
   [ ] Organisation name confirmed from dev.azure.com URL → AZURE_DEVOPS_ORG
   [ ] Project names noted (exact case) → AZURE_DEVOPS_PROJECTS
-  [ ] PAT created with Work Items R/W + Project and Team R → AZURE_DEVOPS_PAT
+  [ ] PAT created with Work Items R/W + Wiki R/W + Project and Team R → AZURE_DEVOPS_PAT
   [ ] AZURE_DEVOPS_TEAM set if sprints return 404 (optional)
   [ ] Verified with: cd backend && python3 test_devops.py
 

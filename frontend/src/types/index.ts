@@ -207,6 +207,7 @@ export interface StoryCreate {
   assigned_to_email?: string;
   priority?: number;
   sprint_path?: string;
+  parent_id?: number;
 }
 
 export interface StoryUpdate {
@@ -235,6 +236,42 @@ export interface Sprint {
   time_frame: "past" | "current" | "future";
   stories: Story[];
   stats: SprintStats;
+}
+
+export interface ADOWikiPage {
+  path: string;
+  title: string;
+  project: string;
+  wiki_id: string;
+  wiki_name: string;
+  has_sub_pages: boolean;
+}
+
+export interface WikiDocument {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  author_id: string;
+  author_name: string;
+  author_email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WikiDocumentCreate {
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+}
+
+export interface WikiDocumentUpdate {
+  title?: string;
+  content?: string;
+  category?: string;
+  tags?: string[];
 }
 
 export interface DashboardStats {
