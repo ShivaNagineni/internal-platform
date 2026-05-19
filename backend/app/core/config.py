@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     azure_ad_client_id: str = ""
     azure_ad_client_secret: str = ""
 
+    azure_devops_org: str = ""
+    azure_devops_projects: list[str] = []  # JSON array: ["ROCON Infra","KosmicEye"]
+    azure_devops_team: str = ""  # optional — leave blank to use each project's default team
+    azure_devops_pat: str = ""  # Personal Access Token (preferred over service principal)
+
     github_webhook_secret: str = ""
     github_token: str = ""
     github_repos: str = ""  # comma-separated, e.g. "owner/repo1,owner/repo2"

@@ -15,6 +15,8 @@ import {
   PanelLeftOpen,
   Sun,
   Moon,
+  ClipboardList,
+  BookOpen,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import * as Tooltip from "@radix-ui/react-tooltip";
@@ -27,6 +29,7 @@ interface NavItem {
   label: string;
   to: string;
   icon: React.ComponentType<{ className?: string }>;
+  minRole?: "MANAGER" | "ADMIN" | "OWNER";
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -34,15 +37,26 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Leave Tracker", to: "/leave", icon: CalendarDays },
   { label: "Innovation Hub", to: "/ideas", icon: Lightbulb },
   { label: "Release Control", to: "/releases", icon: Rocket },
+  { label: "Azure Stories", to: "/stories", icon: ClipboardList },
+  { label: "Wiki", to: "/wiki", icon: BookOpen },
   { label: "Team Members", to: "/users", icon: Users },
   // { label: "Departments", to: "/departments", icon: Building2 },
 ];
+
+const ROLE_RANK: Record<string, number> = {
+  EMPLOYEE: 0,
+  MANAGER: 1,
+  ADMIN: 2,
+  OWNER: 3,
+};
 
 const ROUTE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/leave": "Leave Tracker",
   "/ideas": "Innovation Hub",
   "/releases": "Release Control",
+  "/stories": "Azure Stories",
+  "/wiki": "Wiki",
   "/users": "Team Members",
   "/departments": "Departments",
 };
@@ -132,7 +146,9 @@ export default function Layout({ children }: LayoutProps) {
                 Navigation
               </p>
             )}
-            {NAV_ITEMS.map(({ label, to, icon: Icon }) => (
+            {NAV_ITEMS.filter(({ minRole }) =>
+              !minRole || (currentUser && ROLE_RANK[currentUser.role] >= ROLE_RANK[minRole])
+            ).map(({ label, to, icon: Icon }) => (
               <NavLink
                 key={to}
                 to={to}

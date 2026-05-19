@@ -10,6 +10,8 @@ import IdeasPage from "@/pages/Ideas";
 import ReleasesPage from "@/pages/Releases";
 import UsersPage from "@/pages/Users";
 import DepartmentsPage from "@/pages/Departments";
+import StoriesPage from "@/pages/Stories";
+import WikiPage from "@/pages/Wiki";
 
 // ─── Zoho OAuth callback page ─────────────────────────────────────────────────
 
@@ -173,6 +175,8 @@ export default function App() {
                 <Route path="/releases" element={<ReleasesPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/departments" element={<DepartmentsPage />} />
+                <Route path="/stories" element={<StoriesPage />} />
+                <Route path="/wiki" element={<WikiPage />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </Layout>
